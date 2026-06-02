@@ -118,6 +118,17 @@ export function createGridView(grid) {
     }
   }
 
+  function invertModules(modules) {
+    for (const gridModule of modules) {
+      if (gridModule.x < 0 || gridModule.y < 0 || gridModule.x >= gridSize || gridModule.y >= gridSize) {
+        continue;
+      }
+
+      const cell = cells[gridModule.y * gridSize + gridModule.x];
+      setCellValue(cell, cell.dataset.value !== "dark");
+    }
+  }
+
   function setCellValue(cell, isBlack) {
     cell.dataset.value = isBlack ? "dark" : "light";
     cell.classList.toggle("is-black", isBlack);
@@ -132,6 +143,7 @@ export function createGridView(grid) {
   return {
     clearPixels,
     getGridSize: () => gridSize,
+    invertModules,
     renderOverlays,
     setAreasVisible,
     setCellSize,
