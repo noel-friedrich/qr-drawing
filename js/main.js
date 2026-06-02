@@ -9,7 +9,6 @@ const baseCellSize = 24;
 const minZoom = 0.2;
 const maxZoom = 8;
 const zoomStep = 0.25;
-const dragThreshold = 4;
 let zoom = 1;
 let panStart = null;
 let suppressClickUntil = 0;
@@ -44,6 +43,10 @@ function getFitZoom() {
   const availableHeight = workspace.clientHeight * 0.7;
 
   return Math.min(1, availableWidth / baseGridPixels, availableHeight / baseGridPixels);
+}
+
+function getDragThreshold() {
+  return baseCellSize * zoom;
 }
 
 function applyZoom() {
@@ -88,12 +91,11 @@ workspace.addEventListener("pointerdown", (event) => {
   panStart = {
     x: event.clientX,
     y: event.clientY,
+    pointerId: event.pointerId,
     scrollLeft: workspace.scrollLeft,
     scrollTop: workspace.scrollTop,
     isDragging: false,
   };
-
-  workspace.setPointerCapture(event.pointerId);
 });
 
 workspace.addEventListener("pointermove", (event) => {
@@ -104,13 +106,16 @@ workspace.addEventListener("pointermove", (event) => {
   const deltaX = event.clientX - panStart.x;
   const deltaY = event.clientY - panStart.y;
 
-  if (!panStart.isDragging && Math.hypot(deltaX, deltaY) < dragThreshold) {
+  if (!panStart.isDragging && Math.hypot(deltaX, deltaY) < getDragThreshold()) {
     return;
   }
 
   panStart.isDragging = true;
   suppressClickUntil = Date.now() + 250;
   workspace.classList.add("is-panning");
+  if (!workspace.hasPointerCapture(panStart.pointerId)) {
+    workspace.setPointerCapture(panStart.pointerId);
+  }
   workspace.scrollLeft = panStart.scrollLeft - deltaX;
   workspace.scrollTop = panStart.scrollTop - deltaY;
   event.preventDefault();
@@ -130,6 +135,10 @@ workspace.addEventListener("pointerup", () => {
 });
 
 workspace.addEventListener("pointercancel", () => {
+  if (panStart?.isDragging) {
+    suppressClickUntil = Date.now() + 250;
+  }
+
   workspace.classList.remove("is-panning");
   panStart = null;
 });
