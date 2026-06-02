@@ -1,4 +1,4 @@
-ximport { baseCellSize, overlayPalette } from "./config.js";
+import { baseCellSize, overlayPalette } from "./config.js";
 
 export function createGridView(grid) {
   const overlayLayer = document.createElement("div");
@@ -33,7 +33,7 @@ export function createGridView(grid) {
       event.preventDefault();
       event.stopImmediatePropagation();
     },
-    true
+    true,
   );
 
   function setGridSize(nextGridSize) {
