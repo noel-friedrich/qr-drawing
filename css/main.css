@@ -1,88 +1,306 @@
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html,
 body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+
+    --sidebar-width: 400px;
 }
 
 body {
-  overflow: hidden;
-  background: #f5f5f5;
-  color: #000;
-  font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+    background: #f5f5f5;
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 button {
-  appearance: none;
-  min-width: 34px;
-  height: 34px;
-  border: 1px solid #000;
-  border-radius: 0;
-  background: #fff;
-  color: #000;
-  font: inherit;
-  line-height: 1;
-  cursor: pointer;
+    appearance: none;
+    min-width: 34px;
+    height: 34px;
+    border: 1px solid #000;
+    border-radius: 0;
+    background: #fff;
+    color: #000;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+select,
+input,
+textarea {
+    width: 100%;
+    border: 1px solid #000;
+    border-radius: 0;
+    background: #fff;
+    color: #000;
+    font: inherit;
+}
+
+select,
+input {
+    height: 34px;
+}
+
+textarea {
+    min-height: 92px;
+    padding: 8px;
+    resize: vertical;
+    line-height: 1.35;
 }
 
 .controls button:active {
-  background: #000;
-  color: #fff;
+    background: #000;
+    color: #fff;
 }
 
-button:focus-visible {
-  outline: 2px solid #000;
-  outline-offset: 1px;
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: 1px;
+}
+
+.sidebar-open-button {
+    display: none;
+}
+
+.area-toggle {
+    position: fixed;
+    top: 10px;
+    left: calc(var(--sidebar-width) + 10px);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid #000;
+    background: #fff;
+    cursor: pointer;
+}
+
+.area-toggle input {
+    margin: 0;
+}
+
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 3;
+    width: var(--sidebar-width);
+    padding: 16px;
+    overflow: auto;
+    border-right: 1px solid #000;
+    background: #fff;
+}
+
+.sidebar-top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.field {
+    display: grid;
+    flex: 1;
+    gap: 6px;
+}
+
+.field span {
+    font-size: 13px;
+}
+
+.field-hint {
+    color: #555;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.sidebar-section {
+    margin-bottom: 28px;
+}
+
+.sidebar-field {
+    margin: 16px 0 8px;
+}
+
+.button-stack {
+    display: grid;
+    gap: 8px;
+}
+
+.sidebar h1 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.sidebar h2 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    line-height: 1.2;
+}
+
+.sidebar p {
+    margin: 0 0 16px;
+    line-height: 1.4;
+}
+
+.sidebar button:not(.sidebar-close-button) {
+    width: 100%;
+}
+
+.legend {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.workspace-legend {
+    position: fixed;
+    bottom: 10px;
+    left: calc(var(--sidebar-width) + 10px);
+    z-index: 0;
+    max-width: min(280px, calc(100vw - var(--sidebar-width) - 20px));
+    padding: 10px;
+    pointer-events: none;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 22px;
+    font-size: 14px;
+}
+
+.legend-swatch {
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+}
+
+.sidebar-close-button {
+    display: none;
 }
 
 .controls {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-  display: flex;
-  gap: 6px;
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    z-index: 2;
+    display: flex;
+    gap: 6px;
 }
 
 .workspace {
-  width: 100vw;
-  height: 100vh;
-  overflow: auto;
-  cursor: grab;
-  user-select: none;
-  -webkit-overflow-scrolling: touch;
+    position: relative;
+    width: calc(100vw - var(--sidebar-width));
+    height: 100vh;
+    margin-left: var(--sidebar-width);
+    padding: 10px;
+    overflow: auto;
+    cursor: grab;
+    user-select: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 .workspace.is-panning {
-  cursor: grabbing;
+    cursor: grabbing;
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(21, 24px);
-  grid-template-rows: repeat(21, 24px);
-  width: max-content;
-  border-top: 1px solid #bdbdbd;
-  border-left: 1px solid #bdbdbd;
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(21, 24px);
+    grid-template-rows: repeat(21, 24px);
+    width: max-content;
+    overflow: visible;
+    border-top: 1px solid #bdbdbd;
+    border-left: 1px solid #bdbdbd;
+}
+
+.overlay-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.overlay-zone {
+    position: absolute;
+    border: 1px solid rgba(0, 0, 0, 0.32);
 }
 
 .cell {
-  min-width: 0;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border-top: 0;
-  border-right: 1px solid #bdbdbd;
-  border-bottom: 1px solid #bdbdbd;
-  border-left: 0;
-  background: #fff;
-  cursor: inherit;
+    position: relative;
+    z-index: 0;
+    min-width: 0;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-top: 0;
+    border-right: 1px solid #bdbdbd;
+    border-bottom: 1px solid #bdbdbd;
+    border-left: 0;
+    background: #fff;
+    cursor: inherit;
 }
 
 .cell.is-black {
-  background: #000;
+    background: #000;
+    z-index: 2;
+}
+
+@media (max-width: 767px) {
+    .sidebar-open-button {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 2;
+        display: block;
+    }
+
+    .area-toggle {
+        left: 70px;
+    }
+
+    .workspace-legend {
+        left: 10px;
+        max-width: calc(100vw - 20px);
+    }
+
+    .sidebar {
+        width: 100vw;
+        border-right: 0;
+        pointer-events: none;
+        transform: translateX(-100%);
+        transition: transform 160ms ease;
+    }
+
+    body.sidebar-is-open .sidebar {
+        pointer-events: auto;
+        transform: translateX(0);
+    }
+
+    .sidebar-close-button {
+        display: block;
+    }
+
+    .workspace {
+        width: 100vw;
+        margin-left: 0;
+    }
 }

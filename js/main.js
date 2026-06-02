@@ -1,151 +1,244 @@
+import { createGridView } from "./grid-view.js";
+import { createDataControls } from "./data-controls.js";
+import { encodeData, encodeDataErrorCorrection } from "./data-encoding.js";
+import {
+  getDataResetModules,
+  getErrorCorrectionLevelModules,
+  getFormatErrorCorrectionModules,
+  getFinderPatternModules,
+  getMaskingPatternIndicatorModules,
+  getMaskingPatternModules,
+  getTimingPatternModules,
+} from "./fill-patterns.js";
+import { getLegendItems, getOverlayRects, getVersions, getVersionSpec, loadQrSpecification } from "./qr-spec.js";
+import { createSidebar } from "./sidebar.js";
+import { createZoomPan } from "./zoom-pan.js";
+
 const grid = document.getElementById("grid");
 const workspace = document.getElementById("workspace");
 const zoomIn = document.getElementById("zoom-in");
 const zoomOut = document.getElementById("zoom-out");
 const resetView = document.getElementById("reset-view");
+const openSidebar = document.getElementById("open-sidebar");
+const closeSidebar = document.getElementById("close-sidebar");
+const addData = document.getElementById("add-data");
+const addDataErrorCorrection = document.getElementById("add-data-error-correction");
+const clearGrid = document.getElementById("clear-grid");
+const resetData = document.getElementById("reset-data");
+const fillErrorCorrection = document.getElementById("fill-error-correction");
+const fillFormatErrorCorrection = document.getElementById("fill-format-error-correction");
+const fillFinderPatterns = document.getElementById("fill-finder-patterns");
+const fillMaskIndicator = document.getElementById("fill-mask-indicator");
+const fillMaskPattern = document.getElementById("fill-mask-pattern");
+const fillTimingPatterns = document.getElementById("fill-timing-patterns");
+const areaToggle = document.getElementById("area-toggle");
+const dataFieldContainer = document.getElementById("data-field-container");
+const dataStatus = document.getElementById("data-status");
+const dataTypeSelect = document.getElementById("data-type-select");
+const errorCorrectionSelect = document.getElementById("error-correction-select");
+const maskPatternSelect = document.getElementById("mask-pattern-select");
+const versionSelect = document.getElementById("version-select");
+const versionSummary = document.getElementById("version-summary");
+const overlayLegend = document.getElementById("overlay-legend");
 
-const gridSize = 21;
-const baseCellSize = 24;
-const minZoom = 0.2;
-const maxZoom = 8;
-const zoomStep = 0.25;
-let zoom = 1;
-let panStart = null;
-let suppressClickUntil = 0;
+let currentVersionSpec = null;
+let currentEncodedData = null;
 
-for (let index = 0; index < gridSize * gridSize; index += 1) {
-  const cell = document.createElement("button");
-  cell.type = "button";
-  cell.className = "cell";
-  cell.setAttribute("aria-label", `Pixel ${index + 1}`);
-  cell.addEventListener("click", () => {
-    cell.classList.toggle("is-black");
+const gridView = createGridView(grid);
+const dataControls = createDataControls({
+  container: dataFieldContainer,
+  typeSelect: dataTypeSelect,
+});
+const zoomPan = createZoomPan({
+  grid,
+  gridView,
+  resetView,
+  workspace,
+  zoomIn,
+  zoomOut,
+});
+const sidebar = createSidebar({
+  closeButton: closeSidebar,
+  legendList: overlayLegend,
+  openButton: openSidebar,
+  summary: versionSummary,
+  versionSelect,
+});
+
+clearGrid.addEventListener("click", () => {
+  gridView.clearPixels();
+  currentEncodedData = null;
+  setDataStatus("");
+});
+
+resetData.addEventListener("click", () => {
+  if (currentVersionSpec) {
+    gridView.setModules(getDataResetModules(currentVersionSpec));
+    currentEncodedData = null;
+    setDataStatus("Data modules reset.");
+  }
+});
+
+addData.addEventListener("click", () => {
+  addCurrentData();
+});
+
+addDataErrorCorrection.addEventListener("click", () => {
+  if (!currentVersionSpec) {
+    return;
+  }
+
+  try {
+    const encodedData = currentEncodedData ?? addCurrentData();
+    const encodedErrorCorrection = encodeDataErrorCorrection({
+      dataBlocks: encodedData.blocks,
+      errorCorrectionLevel: errorCorrectionSelect.value,
+      versionSpec: currentVersionSpec,
+    });
+
+    gridView.setModules(encodedErrorCorrection.modules);
+    gridView.setModules(encodedErrorCorrection.remainderModules);
+    setDataStatus(
+      `Added ${encodedErrorCorrection.codewords.length} error-correction codewords.`
+    );
+  } catch (error) {
+    setDataStatus(error.message);
+  }
+});
+
+areaToggle.addEventListener("change", () => {
+  gridView.setAreasVisible(areaToggle.checked);
+});
+
+dataTypeSelect.addEventListener("change", () => {
+  currentEncodedData = null;
+  setDataStatus("");
+});
+
+dataFieldContainer.addEventListener("input", () => {
+  currentEncodedData = null;
+  setDataStatus("");
+});
+
+errorCorrectionSelect.addEventListener("change", () => {
+  currentEncodedData = null;
+  setDataStatus("");
+});
+
+fillFinderPatterns.addEventListener("click", () => {
+  if (currentVersionSpec) {
+    gridView.setModules(getFinderPatternModules(currentVersionSpec));
+  }
+});
+
+fillTimingPatterns.addEventListener("click", () => {
+  if (currentVersionSpec) {
+    gridView.setModules(getTimingPatternModules(currentVersionSpec));
+  }
+});
+
+fillErrorCorrection.addEventListener("click", () => {
+  if (currentVersionSpec) {
+    gridView.setModules(
+      getErrorCorrectionLevelModules(
+        currentVersionSpec,
+        errorCorrectionSelect.value,
+        maskPatternSelect.value
+      )
+    );
+  }
+});
+
+fillMaskPattern.addEventListener("click", () => {
+  if (currentVersionSpec) {
+    gridView.invertModules(getMaskingPatternModules(currentVersionSpec, maskPatternSelect.value));
+    gridView.setModules(
+      getMaskingPatternIndicatorModules(
+        currentVersionSpec,
+        errorCorrectionSelect.value,
+        maskPatternSelect.value
+      )
+    );
+  }
+});
+
+fillMaskIndicator.addEventListener("click", () => {
+  if (currentVersionSpec) {
+    gridView.setModules(
+      getMaskingPatternIndicatorModules(
+        currentVersionSpec,
+        errorCorrectionSelect.value,
+        maskPatternSelect.value
+      )
+    );
+  }
+});
+
+fillFormatErrorCorrection.addEventListener("click", () => {
+  if (currentVersionSpec) {
+    gridView.setModules(
+      getFormatErrorCorrectionModules(
+        currentVersionSpec,
+        errorCorrectionSelect.value,
+        maskPatternSelect.value
+      )
+    );
+  }
+});
+
+try {
+  const specification = await loadQrSpecification();
+  const versions = getVersions(specification);
+
+  sidebar.populateVersions(versions);
+  sidebar.onVersionChange((version) => {
+    applyVersion(specification, version);
   });
-  grid.appendChild(cell);
+
+  applyVersion(specification, versions[0].version);
+} catch (error) {
+  sidebar.renderError(error.message);
 }
 
-grid.addEventListener(
-  "click",
-  (event) => {
-    if (Date.now() >= suppressClickUntil) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  },
-  true
-);
-
-function getFitZoom() {
-  const baseGridPixels = gridSize * baseCellSize + 1;
-  const availableWidth = workspace.clientWidth * 0.7;
-  const availableHeight = workspace.clientHeight * 0.7;
-
-  return Math.min(1, availableWidth / baseGridPixels, availableHeight / baseGridPixels);
-}
-
-function getDragThreshold() {
-  return baseCellSize * zoom;
-}
-
-function applyZoom() {
-  const cellSize = `${baseCellSize * zoom}px`;
-  const gridPixels = gridSize * baseCellSize * zoom + 1;
-  const horizontalPadding = workspace.clientWidth * 0.15;
-  const verticalPadding = workspace.clientHeight * 0.15;
-  const horizontalMargin = Math.max(horizontalPadding, (workspace.clientWidth - gridPixels) / 2);
-  const verticalMargin = Math.max(verticalPadding, (workspace.clientHeight - gridPixels) / 2);
-
-  grid.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize})`;
-  grid.style.gridTemplateRows = `repeat(${gridSize}, ${cellSize})`;
-  grid.style.margin = `${verticalMargin}px ${horizontalMargin}px`;
-
-  for (const cell of grid.children) {
-    cell.style.width = cellSize;
-    cell.style.height = cellSize;
-  }
-}
-
-zoomIn.addEventListener("click", () => {
-  zoom = Math.min(maxZoom, zoom + zoomStep);
-  applyZoom();
-});
-
-zoomOut.addEventListener("click", () => {
-  zoom = Math.max(minZoom, zoom - zoomStep);
-  applyZoom();
-});
-
-resetView.addEventListener("click", () => {
-  zoom = getFitZoom();
-  workspace.scrollTo(0, 0);
-  applyZoom();
-});
-
-workspace.addEventListener("pointerdown", (event) => {
-  if (event.pointerType !== "mouse" || event.button !== 0) {
+function applyVersion(specification, version) {
+  const versionSpec = getVersionSpec(specification, version);
+  if (!versionSpec) {
     return;
   }
 
-  panStart = {
-    x: event.clientX,
-    y: event.clientY,
-    pointerId: event.pointerId,
-    scrollLeft: workspace.scrollLeft,
-    scrollTop: workspace.scrollTop,
-    isDragging: false,
-  };
-});
+  currentVersionSpec = versionSpec;
+  currentEncodedData = null;
+  setDataStatus("");
+  sidebar.setSelectedVersion(version);
+  sidebar.renderSummary(versionSpec);
+  sidebar.renderLegend(getLegendItems(versionSpec));
+  gridView.setGridSize(versionSpec.module_count);
+  gridView.renderOverlays(getOverlayRects(versionSpec));
+  zoomPan.fitToView();
+}
 
-workspace.addEventListener("pointermove", (event) => {
-  if (!panStart) {
-    return;
+function addCurrentData() {
+  if (!currentVersionSpec) {
+    return [];
   }
 
-  const deltaX = event.clientX - panStart.x;
-  const deltaY = event.clientY - panStart.y;
+  const encodedData = encodeData({
+    ...dataControls.getData(),
+    errorCorrectionLevel: errorCorrectionSelect.value,
+    versionSpec: currentVersionSpec,
+  });
 
-  if (!panStart.isDragging && Math.hypot(deltaX, deltaY) < getDragThreshold()) {
-    return;
+  if (encodedData.bits.length > encodedData.dataCapacityBits) {
+    throw new Error("Data does not fit in the selected version and error-correction level.");
   }
 
-  panStart.isDragging = true;
-  suppressClickUntil = Date.now() + 250;
-  workspace.classList.add("is-panning");
-  if (!workspace.hasPointerCapture(panStart.pointerId)) {
-    workspace.setPointerCapture(panStart.pointerId);
-  }
-  workspace.scrollLeft = panStart.scrollLeft - deltaX;
-  workspace.scrollTop = panStart.scrollTop - deltaY;
-  event.preventDefault();
-});
+  gridView.setModules(encodedData.modules);
+  currentEncodedData = encodedData;
+  setDataStatus(`Added ${encodedData.codewords.length} padded data codewords.`);
 
-workspace.addEventListener("pointerup", () => {
-  if (!panStart) {
-    return;
-  }
+  return currentEncodedData;
+}
 
-  if (panStart.isDragging) {
-    suppressClickUntil = Date.now() + 250;
-  }
-
-  workspace.classList.remove("is-panning");
-  panStart = null;
-});
-
-workspace.addEventListener("pointercancel", () => {
-  if (panStart?.isDragging) {
-    suppressClickUntil = Date.now() + 250;
-  }
-
-  workspace.classList.remove("is-panning");
-  panStart = null;
-});
-
-window.addEventListener("resize", () => {
-  applyZoom();
-});
-
-zoom = getFitZoom();
-applyZoom();
+function setDataStatus(message) {
+  dataStatus.textContent = message;
+}

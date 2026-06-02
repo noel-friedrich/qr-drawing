@@ -1,22 +1,162 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>QR Studio</title>
-    <link rel="stylesheet" href="css/main.css">
-  </head>
-  <body>
-    <div class="controls" aria-label="View controls">
-      <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
-      <button type="button" id="zoom-out" aria-label="Zoom out">-</button>
-      <button type="button" id="reset-view">reset view</button>
-    </div>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>QR Studio</title>
+        <link rel="stylesheet" href="css/main.css" />
+    </head>
+    <body>
+        <button
+            type="button"
+            class="sidebar-open-button"
+            id="open-sidebar"
+            aria-controls="sidebar"
+            aria-expanded="false"
+            aria-label="Open sidebar"
+        >
+            menu
+        </button>
 
-    <main class="workspace" id="workspace">
-      <div class="grid" id="grid" aria-label="21 by 21 pixel grid"></div>
-    </main>
+        <label class="area-toggle">
+            <input type="checkbox" id="area-toggle" checked />
+            <span>Areas</span>
+        </label>
 
-    <script src="js/main.js"></script>
-  </body>
+        <aside class="sidebar" id="sidebar" aria-label="Editor sidebar">
+            <div class="sidebar-top">
+                <label class="field">
+                    <span>QR code size</span>
+                    <select id="version-select"></select>
+                </label>
+                <button
+                    type="button"
+                    class="sidebar-close-button"
+                    id="close-sidebar"
+                    aria-label="Close sidebar"
+                >
+                    x
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <h1>QR Studio</h1>
+                <p id="version-summary">Loading QR specification...</p>
+                <div class="button-stack">
+                    <button type="button" id="clear-grid">Clear pixels</button>
+                    <button type="button" id="reset-data">Reset data</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Step 1: Set Finder Patterns</h2>
+                <p>Place the three finder patterns that scanners use to locate and orient the QR code.</p>
+                <button type="button" id="fill-finder-patterns">
+                    Fill finder patterns
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Step 2: Set Timing Patterns</h2>
+                <p>Place the alternating timing modules between the finder patterns so the grid spacing can be read.</p>
+                <button type="button" id="fill-timing-patterns">
+                    Fill timing patterns
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Step 3: Set Error Correction</h2>
+                <p>Choose the QR error correction level and write its format-information indicator bits.</p>
+                <label class="field sidebar-field">
+                    <span>Error correction level</span>
+                    <select id="error-correction-select">
+                        <option value="L" selected>L - Low</option>
+                        <option value="M">M - Medium</option>
+                        <option value="Q">Q - Quartile</option>
+                        <option value="H">H - High</option>
+                    </select>
+                </label>
+                <button type="button" id="fill-error-correction">
+                    Fill error correction
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Step 4: Set Format Error Correction</h2>
+                <p>
+                    Write the format check bits for the selected error correction level and masking pattern.
+                    This also includes the masking pattern indicator, because both values are protected together
+                    in the 15-bit QR format information.
+                </p>
+                <label class="field sidebar-field">
+                    <span>Masking pattern</span>
+                    <select id="mask-pattern-select">
+                        <option value="0">Pattern 0</option>
+                        <option value="1">Pattern 1</option>
+                        <option value="2">Pattern 2</option>
+                        <option value="3">Pattern 3</option>
+                        <option value="4">Pattern 4</option>
+                        <option value="5">Pattern 5</option>
+                        <option value="6">Pattern 6</option>
+                        <option value="7">Pattern 7</option>
+                    </select>
+                </label>
+                <div class="button-stack">
+                    <button type="button" id="fill-mask-indicator">
+                        Fill masking pattern indicator
+                    </button>
+                    <button type="button" id="fill-format-error-correction">
+                        Fill format error correction
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Step 5: Set Data</h2>
+                <p>Encode the selected input and fill the complete data-codeword area with payload, terminator, and pad bytes.</p>
+                <label class="field">
+                    <span>Data type</span>
+                    <select id="data-type-select">
+                        <option value="numeric">Numeric</option>
+                        <option value="alphanumeric" selected>Alphanumeric</option>
+                        <option value="byte">Byte text</option>
+                        <option value="binary">Binary bytes</option>
+                    </select>
+                </label>
+                <div id="data-field-container"></div>
+                <button type="button" id="add-data">Add data</button>
+                <p class="field-hint" id="data-status"></p>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Step 6: Set Error Correction</h2>
+                <p>Generate and place the Reed-Solomon error correction codewords for the padded data blocks.</p>
+                <button type="button" id="add-data-error-correction">
+                    Add error correction
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Step 7: Apply Chosen Masking Pattern</h2>
+                <p>Invert data and error-correction modules according to the selected masking pattern.</p>
+                <button type="button" id="fill-mask-pattern">
+                    Fill masking pattern
+                </button>
+            </div>
+
+        </aside>
+
+        <div class="controls" aria-label="View controls">
+            <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+            <button type="button" id="zoom-out" aria-label="Zoom out">-</button>
+            <button type="button" id="reset-view">reset view</button>
+        </div>
+
+        <main class="workspace" id="workspace">
+            <ul class="legend workspace-legend" id="overlay-legend" aria-label="Special areas"></ul>
+            <div class="grid" id="grid" aria-label="21 by 21 pixel grid"></div>
+        </main>
+
+        <script type="module" src="js/main.js"></script>
+    </body>
 </html>
