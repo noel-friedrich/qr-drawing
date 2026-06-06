@@ -31,6 +31,11 @@ button {
     cursor: pointer;
 }
 
+button:disabled:not(.cell) {
+    opacity: 0.5;
+    cursor: default;
+}
+
 select,
 input,
 textarea {
@@ -71,11 +76,17 @@ textarea:focus-visible {
     display: none;
 }
 
-.area-toggle {
+.workspace-toggles {
     position: fixed;
     top: 10px;
     left: calc(var(--sidebar-width) + 10px);
     z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.workspace-toggle {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -86,7 +97,9 @@ textarea:focus-visible {
     cursor: pointer;
 }
 
-.area-toggle input {
+.workspace-toggle input {
+    width: auto;
+    height: auto;
     margin: 0;
 }
 
@@ -177,6 +190,10 @@ textarea:focus-visible {
     pointer-events: none;
 }
 
+.workspace-legend[hidden] {
+    display: none;
+}
+
 .legend-item {
     display: flex;
     align-items: center;
@@ -211,7 +228,7 @@ textarea:focus-visible {
     margin-left: var(--sidebar-width);
     padding: 10px;
     overflow: auto;
-    cursor: grab;
+    cursor: pointer;
     user-select: none;
     -webkit-overflow-scrolling: touch;
 }
@@ -239,6 +256,22 @@ textarea:focus-visible {
     pointer-events: none;
 }
 
+.data-position-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.data-position-label {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    color: #d00000;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .overlay-zone {
     position: absolute;
     border: 1px solid rgba(0, 0, 0, 0.32);
@@ -264,6 +297,14 @@ textarea:focus-visible {
     z-index: 2;
 }
 
+.grid:not(.areas-visible) {
+    border-color: transparent;
+}
+
+.grid:not(.areas-visible) .cell {
+    border-color: transparent;
+}
+
 @media (max-width: 767px) {
     .sidebar-open-button {
         position: fixed;
@@ -273,7 +314,7 @@ textarea:focus-visible {
         display: block;
     }
 
-    .area-toggle {
+    .workspace-toggles {
         left: 70px;
     }
 

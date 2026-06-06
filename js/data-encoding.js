@@ -136,6 +136,36 @@ const remainderBitsByVersion = {
   10: 0,
 };
 
+export function getDataInputLimit(type, version, errorCorrectionLevel) {
+  const capacityBits = getBlockInfo(version, errorCorrectionLevel).dataCodewords * 8;
+  const characterCountBits =
+    version <= 9
+      ? { numeric: 10, alphanumeric: 9, byte: 8, binary: 8 }
+      : { numeric: 12, alphanumeric: 11, byte: 16, binary: 16 };
+  const payloadCapacity = capacityBits - 4 - characterCountBits[type];
+
+  if (type === "numeric") {
+    return getMaximumUnits(payloadCapacity, (count) => {
+      const groups = Math.floor(count / 3);
+      const remainder = count % 3;
+      return groups * 10 + (remainder === 2 ? 7 : remainder === 1 ? 4 : 0);
+    });
+  }
+
+  if (type === "alphanumeric") {
+    return getMaximumUnits(
+      payloadCapacity,
+      (count) => Math.floor(count / 2) * 11 + (count % 2) * 6,
+    );
+  }
+
+  return Math.floor(payloadCapacity / 8);
+}
+
+export function getDataModulePositions(versionSpec) {
+  return getDataModulePath(versionSpec);
+}
+
 export function encodeData({ type, value, versionSpec, errorCorrectionLevel }) {
   const rawBits = [
     ...modeIndicators[type],
@@ -157,6 +187,16 @@ export function encodeData({ type, value, versionSpec, errorCorrectionLevel }) {
     modules: bitsToModules(interleavedDataBits, path),
     path,
   };
+}
+
+function getMaximumUnits(capacityBits, getRequiredBits) {
+  let count = 0;
+
+  while (getRequiredBits(count + 1) <= capacityBits) {
+    count += 1;
+  }
+
+  return count;
 }
 
 export function encodeDataErrorCorrection({ dataBlocks, versionSpec, errorCorrectionLevel }) {

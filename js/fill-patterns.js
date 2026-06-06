@@ -6,23 +6,66 @@ const errorCorrectionLevelBits = {
 };
 const formatGenerator = 0b10100110111;
 const formatMask = 0b101010000010010;
+const versionGenerator = 0b1111100100101;
 
 export function getFinderPatternModules(versionSpec) {
   const modules = [];
 
   for (const pattern of versionSpec.zones.finder_patterns) {
-    for (let y = 0; y < pattern.height; y += 1) {
-      for (let x = 0; x < pattern.width; x += 1) {
-        modules.push({
-          x: pattern.x + x,
-          y: pattern.y + y,
-          isBlack: isFinderPatternDark(x, y),
-        });
-      }
+    const centerSpiral = getSpiralCoordinates(2, 2, 3, 3);
+    const innerRing = getRingCoordinates(1, 1, 5, 5);
+    const outerRing = getRingCoordinates(0, 0, 7, 7);
+
+    for (const coordinate of [...centerSpiral, ...innerRing, ...outerRing]) {
+      modules.push({
+        x: pattern.x + coordinate.x,
+        y: pattern.y + coordinate.y,
+        isBlack: isFinderPatternDark(coordinate.x, coordinate.y),
+      });
     }
   }
 
+  for (const pattern of versionSpec.zones.alignment_patterns) {
+    const center = [{ x: 2, y: 2 }];
+    const innerRing = getRingCoordinates(1, 1, 3, 3);
+    const outerRing = getRingCoordinates(0, 0, 5, 5);
+
+    for (const coordinate of [...center, ...innerRing, ...outerRing]) {
+      modules.push({
+        x: pattern.x + coordinate.x,
+        y: pattern.y + coordinate.y,
+        isBlack: isAlignmentPatternDark(coordinate.x, coordinate.y),
+      });
+    }
+  }
+
+  for (const darkModule of versionSpec.zones.dark_module) {
+    modules.push({
+      x: darkModule.x,
+      y: darkModule.y,
+      isBlack: true,
+    });
+  }
+
   return modules;
+}
+
+export function getVersionInformationModules(versionSpec) {
+  if (versionSpec.version < 7) {
+    return [];
+  }
+
+  const bits = getVersionBits(versionSpec.version);
+
+  return [...versionSpec.zones.version_information_bits]
+    .sort((first, second) => first.version_string_msb_index - second.version_string_msb_index)
+    .flatMap((entry) =>
+      entry.instances.map((instance) => ({
+        x: instance.x,
+        y: instance.y,
+        isBlack: bits[entry.version_string_msb_index] === "1",
+      })),
+    );
 }
 
 export function getTimingPatternModules(versionSpec) {
@@ -69,15 +112,9 @@ export function getMaskingPatternModules(versionSpec, pattern) {
   const modules = [];
   const patternIndex = Number(pattern);
 
-  for (let y = 0; y < versionSpec.module_count; y += 1) {
-    for (let x = 0; x < versionSpec.module_count; x += 1) {
-      if (reservedModules.has(getModuleKey(x, y))) {
-        continue;
-      }
-
-      if (isMaskModuleDark(patternIndex, x, y)) {
-        modules.push({ x, y });
-      }
+  for (const { x, y } of getDataPath(versionSpec.module_count, reservedModules)) {
+    if (isMaskModuleDark(patternIndex, x, y)) {
+      modules.push({ x, y });
     }
   }
 
@@ -86,17 +123,12 @@ export function getMaskingPatternModules(versionSpec, pattern) {
 
 export function getDataResetModules(versionSpec) {
   const reservedModules = getReservedModules(versionSpec);
-  const modules = [];
 
-  for (let y = 0; y < versionSpec.module_count; y += 1) {
-    for (let x = 0; x < versionSpec.module_count; x += 1) {
-      if (!reservedModules.has(getModuleKey(x, y))) {
-        modules.push({ x, y, isBlack: false });
-      }
-    }
-  }
-
-  return modules;
+  return getDataPath(versionSpec.module_count, reservedModules).map(({ x, y }) => ({
+    x,
+    y,
+    isBlack: false,
+  }));
 }
 
 function isFinderPatternDark(x, y) {
@@ -104,6 +136,59 @@ function isFinderPatternDark(x, y) {
   const isCenter = x >= 2 && x <= 4 && y >= 2 && y <= 4;
 
   return isOuterRing || isCenter;
+}
+
+function isAlignmentPatternDark(x, y) {
+  const isOuterRing = x === 0 || y === 0 || x === 4 || y === 4;
+  const isCenter = x === 2 && y === 2;
+
+  return isOuterRing || isCenter;
+}
+
+function getSpiralCoordinates(startX, startY, width, height) {
+  const coordinates = [];
+  let left = startX;
+  let right = startX + width - 1;
+  let top = startY;
+  let bottom = startY + height - 1;
+
+  while (left <= right && top <= bottom) {
+    for (let x = left; x <= right; x += 1) {
+      coordinates.push({ x, y: top });
+    }
+    top += 1;
+
+    for (let y = top; y <= bottom; y += 1) {
+      coordinates.push({ x: right, y });
+    }
+    right -= 1;
+
+    if (top <= bottom) {
+      for (let x = right; x >= left; x -= 1) {
+        coordinates.push({ x, y: bottom });
+      }
+      bottom -= 1;
+    }
+
+    if (left <= right) {
+      for (let y = bottom; y >= top; y -= 1) {
+        coordinates.push({ x: left, y });
+      }
+      left += 1;
+    }
+  }
+
+  return coordinates;
+}
+
+function getRingCoordinates(x, y, width, height) {
+  return getSpiralCoordinates(x, y, width, height).filter(
+    (coordinate) =>
+      coordinate.x === x ||
+      coordinate.y === y ||
+      coordinate.x === x + width - 1 ||
+      coordinate.y === y + height - 1,
+  );
 }
 
 function getFormatFieldModules(entries, bits) {
@@ -137,6 +222,21 @@ function getFormatRemainder(dataValue) {
   }
 
   return value & 0b1111111111;
+}
+
+function getVersionBits(version) {
+  const unprotectedValue = version << 12;
+  let remainder = unprotectedValue;
+
+  for (let bit = 17; bit >= 12; bit -= 1) {
+    if ((remainder & (1 << bit)) !== 0) {
+      remainder ^= versionGenerator << (bit - 12);
+    }
+  }
+
+  return (unprotectedValue | (remainder & 0xfff))
+    .toString(2)
+    .padStart(18, "0");
 }
 
 function getReservedModules(versionSpec) {
@@ -199,6 +299,31 @@ function addRectangleModules(modules, rectangle) {
 
 function getModuleKey(x, y) {
   return `${x},${y}`;
+}
+
+function getDataPath(moduleCount, reservedModules) {
+  const path = [];
+  let upward = true;
+
+  for (let rightColumn = moduleCount - 1; rightColumn > 0; rightColumn -= 2) {
+    if (rightColumn === 6) {
+      rightColumn -= 1;
+    }
+
+    for (let rowOffset = 0; rowOffset < moduleCount; rowOffset += 1) {
+      const y = upward ? moduleCount - 1 - rowOffset : rowOffset;
+
+      for (const x of [rightColumn, rightColumn - 1]) {
+        if (!reservedModules.has(getModuleKey(x, y))) {
+          path.push({ x, y });
+        }
+      }
+    }
+
+    upward = !upward;
+  }
+
+  return path;
 }
 
 function isMaskModuleDark(pattern, x, y) {

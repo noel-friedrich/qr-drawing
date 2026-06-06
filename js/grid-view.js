@@ -1,8 +1,11 @@
 import { baseCellSize, overlayPalette } from "./config.js";
 
 export function createGridView(grid) {
+  const millisecondsPerPixel = 10;
   const overlayLayer = document.createElement("div");
   overlayLayer.className = "overlay-layer";
+  const dataPositionLayer = document.createElement("div");
+  dataPositionLayer.className = "data-position-layer";
 
   let gridSize = 0;
   let cellSize = baseCellSize;
@@ -10,6 +13,9 @@ export function createGridView(grid) {
   let clickSuppressedUntil = 0;
   let cells = [];
   let areasVisible = true;
+  let dataPositions = [];
+  let dataPositionsVisible = false;
+  let animationId = 0;
 
   function createCell(index) {
     const cell = document.createElement("button");
@@ -37,8 +43,10 @@ export function createGridView(grid) {
   );
 
   function setGridSize(nextGridSize) {
+    animationId += 1;
     gridSize = nextGridSize;
     overlays = [];
+    dataPositions = [];
     cells = [];
     grid.replaceChildren();
 
@@ -49,6 +57,7 @@ export function createGridView(grid) {
     }
 
     grid.appendChild(overlayLayer);
+    grid.appendChild(dataPositionLayer);
     grid.setAttribute("aria-label", `${gridSize} by ${gridSize} pixel grid`);
     setCellSize(cellSize);
   }
@@ -66,6 +75,7 @@ export function createGridView(grid) {
     }
 
     renderOverlays(overlays);
+    renderDataPositions();
   }
 
   function renderOverlays(nextOverlays) {
@@ -118,15 +128,30 @@ export function createGridView(grid) {
     }
   }
 
-  function invertModules(modules) {
-    for (const gridModule of modules) {
-      if (gridModule.x < 0 || gridModule.y < 0 || gridModule.x >= gridSize || gridModule.y >= gridSize) {
-        continue;
-      }
+  function animateOperations(operations) {
+    const targetValues = new Map();
 
-      const cell = cells[gridModule.y * gridSize + gridModule.x];
-      setCellValue(cell, cell.dataset.value !== "dark");
+    for (const operation of operations) {
+      for (const gridModule of operation.modules) {
+        if (!isValidModule(gridModule.x, gridModule.y)) {
+          continue;
+        }
+
+        const index = gridModule.y * gridSize + gridModule.x;
+        const currentValue =
+          targetValues.get(index) ?? (cells[index].dataset.value === "dark");
+        const nextValue =
+          operation.type === "invert" ? !currentValue : gridModule.isBlack;
+
+        targetValues.set(index, nextValue);
+      }
     }
+
+    const changes = [...targetValues.entries()]
+      .filter(([index, isBlack]) => (cells[index].dataset.value === "dark") !== isBlack)
+      .map(([index, isBlack]) => ({ index, isBlack }));
+
+    return animateChanges(changes);
   }
 
   function setCellValue(cell, isBlack) {
@@ -137,7 +162,92 @@ export function createGridView(grid) {
 
   function setAreasVisible(isVisible) {
     areasVisible = isVisible;
+    grid.classList.toggle("areas-visible", isVisible);
     renderOverlays(overlays);
+  }
+
+  function setDataPositions(positions) {
+    dataPositions = positions;
+    renderDataPositions();
+  }
+
+  function setDataPositionsVisible(isVisible) {
+    dataPositionsVisible = isVisible;
+    renderDataPositions();
+  }
+
+  function renderDataPositions() {
+    dataPositionLayer.replaceChildren();
+
+    if (!dataPositionsVisible) {
+      return;
+    }
+
+    for (let index = 0; index < dataPositions.length; index += 1) {
+      const position = dataPositions[index];
+      const label = document.createElement("span");
+      label.className = "data-position-label";
+      label.textContent = String((index % 8) + 1);
+      label.style.left = `${position.x * cellSize}px`;
+      label.style.top = `${position.y * cellSize}px`;
+      label.style.width = `${cellSize}px`;
+      label.style.height = `${cellSize}px`;
+      label.style.fontSize = `${Math.max(8, Math.min(14, cellSize * 0.45))}px`;
+      dataPositionLayer.appendChild(label);
+    }
+  }
+
+  function isValidModule(x, y) {
+    return x >= 0 && y >= 0 && x < gridSize && y < gridSize;
+  }
+
+  function animateChanges(changes) {
+    animationId += 1;
+    const currentAnimationId = animationId;
+
+    if (changes.length === 0) {
+      return Promise.resolve();
+    }
+
+    const startTime = performance.now();
+    const animationDuration = changes.length * millisecondsPerPixel;
+    let appliedCount = 0;
+
+    return new Promise((resolve) => {
+      function applyFrame(timestamp) {
+        if (currentAnimationId !== animationId) {
+          resolve();
+          return;
+        }
+
+        const progress = Math.min(1, (timestamp - startTime) / animationDuration);
+        const targetCount = Math.min(
+          changes.length,
+          Math.floor(progress * changes.length),
+        );
+
+        while (appliedCount < targetCount) {
+          const change = changes[appliedCount];
+          setCellValue(cells[change.index], change.isBlack);
+          appliedCount += 1;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(applyFrame);
+          return;
+        }
+
+        while (appliedCount < changes.length) {
+          const change = changes[appliedCount];
+          setCellValue(cells[change.index], change.isBlack);
+          appliedCount += 1;
+        }
+
+        resolve();
+      }
+
+      requestAnimationFrame(applyFrame);
+    });
   }
 
   function getMatrix() {
@@ -151,12 +261,14 @@ export function createGridView(grid) {
 
   return {
     clearPixels,
+    animateOperations,
     getGridSize: () => gridSize,
     getMatrix,
-    invertModules,
     renderOverlays,
     setAreasVisible,
     setCellSize,
+    setDataPositions,
+    setDataPositionsVisible,
     setGridSize,
     setModules,
     suppressClicksFor,

@@ -41,10 +41,6 @@ export function createZoomPan({
     return Math.min(1, availableWidth / baseGridPixels, availableHeight / baseGridPixels);
   }
 
-  function getDragThreshold() {
-    return baseCellSize * zoom;
-  }
-
   function applyZoom() {
     const nextCellSize = baseCellSize * zoom;
     const gridPixels = gridView.getGridSize() * nextCellSize + 1;
@@ -152,7 +148,7 @@ export function createZoomPan({
     const deltaX = event.clientX - panStart.x;
     const deltaY = event.clientY - panStart.y;
 
-    if (!panStart.isDragging && Math.hypot(deltaX, deltaY) < getDragThreshold()) {
+    if (!panStart.isDragging && deltaX === 0 && deltaY === 0) {
       return;
     }
 

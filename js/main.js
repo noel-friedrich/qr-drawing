@@ -1,6 +1,10 @@
 import { createGridView } from "./grid-view.js";
 import { createDataControls } from "./data-controls.js";
-import { encodeData, encodeDataErrorCorrection } from "./data-encoding.js";
+import {
+  encodeData,
+  encodeDataErrorCorrection,
+  getDataModulePositions,
+} from "./data-encoding.js";
 import {
   getDataResetModules,
   getErrorCorrectionLevelModules,
@@ -9,6 +13,7 @@ import {
   getMaskingPatternIndicatorModules,
   getMaskingPatternModules,
   getTimingPatternModules,
+  getVersionInformationModules,
 } from "./fill-patterns.js";
 import { getLegendItems, getOverlayRects, getVersions, getVersionSpec, loadQrSpecification } from "./qr-spec.js";
 import { downloadQrPng } from "./png-export.js";
@@ -33,8 +38,10 @@ const fillFinderPatterns = document.getElementById("fill-finder-patterns");
 const fillMaskIndicator = document.getElementById("fill-mask-indicator");
 const fillMaskPattern = document.getElementById("fill-mask-pattern");
 const fillTimingPatterns = document.getElementById("fill-timing-patterns");
+const fillVersionInformation = document.getElementById("fill-version-information");
 const areaToggle = document.getElementById("area-toggle");
 const dataFieldContainer = document.getElementById("data-field-container");
+const dataPositionsToggle = document.getElementById("data-positions-toggle");
 const dataStatus = document.getElementById("data-status");
 const dataTypeSelect = document.getElementById("data-type-select");
 const errorCorrectionSelect = document.getElementById("error-correction-select");
@@ -67,15 +74,23 @@ const sidebar = createSidebar({
   versionSelect,
 });
 
+gridView.setAreasVisible(areaToggle.checked);
+overlayLegend.hidden = !areaToggle.checked;
+
 clearGrid.addEventListener("click", () => {
-  gridView.clearPixels();
+  animateGridOperations([
+    {
+      type: "set",
+      modules: getAllGridModules(false),
+    },
+  ]);
   currentEncodedData = null;
   setDataStatus("");
 });
 
 resetData.addEventListener("click", () => {
   if (currentVersionSpec) {
-    gridView.setModules(getDataResetModules(currentVersionSpec));
+    animateSetModules(getDataResetModules(currentVersionSpec));
     currentEncodedData = null;
     setDataStatus("Data modules reset.");
   }
@@ -96,15 +111,20 @@ addDataErrorCorrection.addEventListener("click", () => {
   }
 
   try {
-    const encodedData = currentEncodedData ?? addCurrentData();
+    const shouldAddData = currentEncodedData === null;
+    const encodedData = currentEncodedData ?? encodeCurrentData();
     const encodedErrorCorrection = encodeDataErrorCorrection({
       dataBlocks: encodedData.blocks,
       errorCorrectionLevel: errorCorrectionSelect.value,
       versionSpec: currentVersionSpec,
     });
 
-    gridView.setModules(encodedErrorCorrection.modules);
-    gridView.setModules(encodedErrorCorrection.remainderModules);
+    animateSetModules([
+      ...(shouldAddData ? encodedData.modules : []),
+      ...encodedErrorCorrection.modules,
+      ...encodedErrorCorrection.remainderModules,
+    ]);
+    currentEncodedData = encodedData;
     setDataStatus(
       `Added ${encodedErrorCorrection.codewords.length} error-correction codewords.`
     );
@@ -115,6 +135,11 @@ addDataErrorCorrection.addEventListener("click", () => {
 
 areaToggle.addEventListener("change", () => {
   gridView.setAreasVisible(areaToggle.checked);
+  overlayLegend.hidden = !areaToggle.checked;
+});
+
+dataPositionsToggle.addEventListener("change", () => {
+  gridView.setDataPositionsVisible(dataPositionsToggle.checked);
 });
 
 dataTypeSelect.addEventListener("change", () => {
@@ -130,23 +155,30 @@ dataFieldContainer.addEventListener("input", () => {
 errorCorrectionSelect.addEventListener("change", () => {
   currentEncodedData = null;
   setDataStatus("");
+  updateDataCapacity();
 });
 
 fillFinderPatterns.addEventListener("click", () => {
   if (currentVersionSpec) {
-    gridView.setModules(getFinderPatternModules(currentVersionSpec));
+    animateSetModules(getFinderPatternModules(currentVersionSpec));
+  }
+});
+
+fillVersionInformation.addEventListener("click", () => {
+  if (currentVersionSpec) {
+    animateSetModules(getVersionInformationModules(currentVersionSpec));
   }
 });
 
 fillTimingPatterns.addEventListener("click", () => {
   if (currentVersionSpec) {
-    gridView.setModules(getTimingPatternModules(currentVersionSpec));
+    animateSetModules(getTimingPatternModules(currentVersionSpec));
   }
 });
 
 fillErrorCorrection.addEventListener("click", () => {
   if (currentVersionSpec) {
-    gridView.setModules(
+    animateSetModules(
       getErrorCorrectionLevelModules(
         currentVersionSpec,
         errorCorrectionSelect.value,
@@ -158,20 +190,26 @@ fillErrorCorrection.addEventListener("click", () => {
 
 fillMaskPattern.addEventListener("click", () => {
   if (currentVersionSpec) {
-    gridView.invertModules(getMaskingPatternModules(currentVersionSpec, maskPatternSelect.value));
-    gridView.setModules(
-      getMaskingPatternIndicatorModules(
-        currentVersionSpec,
-        errorCorrectionSelect.value,
-        maskPatternSelect.value
-      )
-    );
+    animateGridOperations([
+      {
+        type: "invert",
+        modules: getMaskingPatternModules(currentVersionSpec, maskPatternSelect.value),
+      },
+      {
+        type: "set",
+        modules: getMaskingPatternIndicatorModules(
+          currentVersionSpec,
+          errorCorrectionSelect.value,
+          maskPatternSelect.value
+        ),
+      },
+    ]);
   }
 });
 
 fillMaskIndicator.addEventListener("click", () => {
   if (currentVersionSpec) {
-    gridView.setModules(
+    animateSetModules(
       getMaskingPatternIndicatorModules(
         currentVersionSpec,
         errorCorrectionSelect.value,
@@ -183,7 +221,7 @@ fillMaskIndicator.addEventListener("click", () => {
 
 fillFormatErrorCorrection.addEventListener("click", () => {
   if (currentVersionSpec) {
-    gridView.setModules(
+    animateSetModules(
       getFormatErrorCorrectionModules(
         currentVersionSpec,
         errorCorrectionSelect.value,
@@ -215,11 +253,14 @@ function applyVersion(specification, version) {
 
   currentVersionSpec = versionSpec;
   currentEncodedData = null;
+  fillVersionInformation.hidden = versionSpec.version < 7;
   setDataStatus("");
+  updateDataCapacity();
   sidebar.setSelectedVersion(version);
   sidebar.renderSummary(versionSpec);
   sidebar.renderLegend(getLegendItems(versionSpec));
   gridView.setGridSize(versionSpec.module_count);
+  gridView.setDataPositions(getDataModulePositions(versionSpec));
   gridView.renderOverlays(getOverlayRects(versionSpec));
   zoomPan.fitToView();
 }
@@ -229,6 +270,16 @@ function addCurrentData() {
     return [];
   }
 
+  const encodedData = encodeCurrentData();
+
+  animateSetModules(encodedData.modules);
+  currentEncodedData = encodedData;
+  setDataStatus(`Added ${encodedData.codewords.length} padded data codewords.`);
+
+  return currentEncodedData;
+}
+
+function encodeCurrentData() {
   const encodedData = encodeData({
     ...dataControls.getData(),
     errorCorrectionLevel: errorCorrectionSelect.value,
@@ -239,13 +290,64 @@ function addCurrentData() {
     throw new Error("Data does not fit in the selected version and error-correction level.");
   }
 
-  gridView.setModules(encodedData.modules);
-  currentEncodedData = encodedData;
-  setDataStatus(`Added ${encodedData.codewords.length} padded data codewords.`);
-
-  return currentEncodedData;
+  return encodedData;
 }
 
 function setDataStatus(message) {
   dataStatus.textContent = message;
+}
+
+function updateDataCapacity() {
+  if (!currentVersionSpec) {
+    return;
+  }
+
+  dataControls.setCapacity({
+    errorCorrectionLevel: errorCorrectionSelect.value,
+    version: currentVersionSpec.version,
+  });
+}
+
+function animateSetModules(modules) {
+  return animateGridOperations([
+    {
+      type: "set",
+      modules,
+    },
+  ]);
+}
+
+async function animateGridOperations(operations) {
+  if (window.matchMedia("(max-width: 767px)").matches) {
+    document.body.classList.remove("sidebar-is-open");
+    openSidebar.setAttribute("aria-expanded", "false");
+  }
+
+  const buttons = [...document.querySelectorAll("button:not(.cell)")];
+  const previousDisabledStates = buttons.map((button) => button.disabled);
+
+  buttons.forEach((button) => {
+    button.disabled = true;
+  });
+
+  try {
+    await gridView.animateOperations(operations);
+  } finally {
+    buttons.forEach((button, index) => {
+      button.disabled = previousDisabledStates[index];
+    });
+  }
+}
+
+function getAllGridModules(isBlack) {
+  const modules = [];
+  const gridSize = gridView.getGridSize();
+
+  for (let y = 0; y < gridSize; y += 1) {
+    for (let x = 0; x < gridSize; x += 1) {
+      modules.push({ x, y, isBlack });
+    }
+  }
+
+  return modules;
 }

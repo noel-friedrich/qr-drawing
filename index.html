@@ -18,10 +18,16 @@
             menu
         </button>
 
-        <label class="area-toggle">
-            <input type="checkbox" id="area-toggle" checked />
-            <span>Areas</span>
-        </label>
+        <div class="workspace-toggles">
+            <label class="workspace-toggle">
+                <input type="checkbox" id="area-toggle" checked />
+                <span>Areas</span>
+            </label>
+            <label class="workspace-toggle">
+                <input type="checkbox" id="data-positions-toggle" />
+                <span>Data Positions</span>
+            </label>
+        </div>
 
         <aside class="sidebar" id="sidebar" aria-label="Editor sidebar">
             <div class="sidebar-top">
@@ -51,9 +57,12 @@
 
             <div class="sidebar-section">
                 <h2>Step 1: Set Finder Patterns</h2>
-                <p>Place the three finder patterns that scanners use to locate and orient the QR code.</p>
+                <p>Place the three finder patterns and any alignment patterns required by the selected QR version.</p>
                 <button type="button" id="fill-finder-patterns">
-                    Fill finder patterns
+                    Fill finder and alignment patterns
+                </button>
+                <button type="button" id="fill-version-information" hidden>
+                    Fill version information
                 </button>
             </div>
 
@@ -93,7 +102,7 @@
                     <span>Masking pattern</span>
                     <select id="mask-pattern-select">
                         <option value="0">Pattern 0</option>
-                        <option value="1">Pattern 1</option>
+                        <option value="1" selected>Pattern 1</option>
                         <option value="2">Pattern 2</option>
                         <option value="3">Pattern 3</option>
                         <option value="4">Pattern 4</option>
