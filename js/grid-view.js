@@ -140,9 +140,19 @@ export function createGridView(grid) {
     renderOverlays(overlays);
   }
 
+  function getMatrix() {
+    return Array.from({ length: gridSize }, (_, y) =>
+      Array.from(
+        { length: gridSize },
+        (_, x) => cells[y * gridSize + x].dataset.value === "dark",
+      ),
+    );
+  }
+
   return {
     clearPixels,
     getGridSize: () => gridSize,
+    getMatrix,
     invertModules,
     renderOverlays,
     setAreasVisible,

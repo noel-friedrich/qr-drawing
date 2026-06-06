@@ -11,6 +11,7 @@ import {
   getTimingPatternModules,
 } from "./fill-patterns.js";
 import { getLegendItems, getOverlayRects, getVersions, getVersionSpec, loadQrSpecification } from "./qr-spec.js";
+import { downloadQrPng } from "./png-export.js";
 import { createSidebar } from "./sidebar.js";
 import { createZoomPan } from "./zoom-pan.js";
 
@@ -24,6 +25,7 @@ const closeSidebar = document.getElementById("close-sidebar");
 const addData = document.getElementById("add-data");
 const addDataErrorCorrection = document.getElementById("add-data-error-correction");
 const clearGrid = document.getElementById("clear-grid");
+const downloadPng = document.getElementById("download-png");
 const resetData = document.getElementById("reset-data");
 const fillErrorCorrection = document.getElementById("fill-error-correction");
 const fillFormatErrorCorrection = document.getElementById("fill-format-error-correction");
@@ -77,6 +79,11 @@ resetData.addEventListener("click", () => {
     currentEncodedData = null;
     setDataStatus("Data modules reset.");
   }
+});
+
+downloadPng.addEventListener("click", () => {
+  const version = currentVersionSpec?.version ?? 1;
+  downloadQrPng(gridView.getMatrix(), `qr-code-v${version}.png`);
 });
 
 addData.addEventListener("click", () => {
