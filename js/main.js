@@ -31,6 +31,7 @@ const addData = document.getElementById("add-data");
 const addDataErrorCorrection = document.getElementById("add-data-error-correction");
 const clearGrid = document.getElementById("clear-grid");
 const downloadPng = document.getElementById("download-png");
+const executeAllSteps = document.getElementById("execute-all-steps");
 const resetData = document.getElementById("reset-data");
 const fillErrorCorrection = document.getElementById("fill-error-correction");
 const fillFormatErrorCorrection = document.getElementById("fill-format-error-correction");
@@ -42,7 +43,6 @@ const fillVersionInformation = document.getElementById("fill-version-information
 const areaToggle = document.getElementById("area-toggle");
 const dataFieldContainer = document.getElementById("data-field-container");
 const dataPositionsToggle = document.getElementById("data-positions-toggle");
-const dataStatus = document.getElementById("data-status");
 const dataTypeSelect = document.getElementById("data-type-select");
 const errorCorrectionSelect = document.getElementById("error-correction-select");
 const maskPatternSelect = document.getElementById("mask-pattern-select");
@@ -85,20 +85,81 @@ clearGrid.addEventListener("click", () => {
     },
   ]);
   currentEncodedData = null;
-  setDataStatus("");
 });
 
 resetData.addEventListener("click", () => {
   if (currentVersionSpec) {
     animateSetModules(getDataResetModules(currentVersionSpec));
     currentEncodedData = null;
-    setDataStatus("Data modules reset.");
   }
 });
 
 downloadPng.addEventListener("click", () => {
   const version = currentVersionSpec?.version ?? 1;
   downloadQrPng(gridView.getMatrix(), `qr-code-v${version}.png`);
+});
+
+executeAllSteps.addEventListener("click", async () => {
+  if (!currentVersionSpec) {
+    return;
+  }
+
+  try {
+    const encodedData = encodeCurrentData();
+    const encodedErrorCorrection = encodeDataErrorCorrection({
+      dataBlocks: encodedData.blocks,
+      errorCorrectionLevel: errorCorrectionSelect.value,
+      versionSpec: currentVersionSpec,
+    });
+
+    await animateSetModules(getAllGridModules(false));
+    await animateSetModules(getFinderPatternModules(currentVersionSpec));
+
+    if (currentVersionSpec.version >= 7) {
+      await animateSetModules(getVersionInformationModules(currentVersionSpec));
+    }
+
+    await animateSetModules(getTimingPatternModules(currentVersionSpec));
+    await animateSetModules(
+      getErrorCorrectionLevelModules(
+        currentVersionSpec,
+        errorCorrectionSelect.value,
+        maskPatternSelect.value,
+      ),
+    );
+    await animateSetModules(
+      getMaskingPatternIndicatorModules(
+        currentVersionSpec,
+        errorCorrectionSelect.value,
+        maskPatternSelect.value,
+      ),
+    );
+    await animateSetModules(
+      getFormatErrorCorrectionModules(
+        currentVersionSpec,
+        errorCorrectionSelect.value,
+        maskPatternSelect.value,
+      ),
+    );
+    await animateSetModules(encodedData.modules);
+    await animateSetModules([
+      ...encodedErrorCorrection.modules,
+      ...encodedErrorCorrection.remainderModules,
+    ]);
+    await animateGridOperations([
+      {
+        type: "invert",
+        modules: getMaskingPatternModules(
+          currentVersionSpec,
+          maskPatternSelect.value,
+        ),
+      },
+    ]);
+
+    currentEncodedData = encodedData;
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 addData.addEventListener("click", () => {
@@ -125,11 +186,8 @@ addDataErrorCorrection.addEventListener("click", () => {
       ...encodedErrorCorrection.remainderModules,
     ]);
     currentEncodedData = encodedData;
-    setDataStatus(
-      `Added ${encodedErrorCorrection.codewords.length} error-correction codewords.`
-    );
   } catch (error) {
-    setDataStatus(error.message);
+    console.error(error);
   }
 });
 
@@ -144,17 +202,14 @@ dataPositionsToggle.addEventListener("change", () => {
 
 dataTypeSelect.addEventListener("change", () => {
   currentEncodedData = null;
-  setDataStatus("");
 });
 
 dataFieldContainer.addEventListener("input", () => {
   currentEncodedData = null;
-  setDataStatus("");
 });
 
 errorCorrectionSelect.addEventListener("change", () => {
   currentEncodedData = null;
-  setDataStatus("");
   updateDataCapacity();
 });
 
@@ -254,7 +309,6 @@ function applyVersion(specification, version) {
   currentVersionSpec = versionSpec;
   currentEncodedData = null;
   fillVersionInformation.hidden = versionSpec.version < 7;
-  setDataStatus("");
   updateDataCapacity();
   sidebar.setSelectedVersion(version);
   sidebar.renderSummary(versionSpec);
@@ -274,7 +328,6 @@ function addCurrentData() {
 
   animateSetModules(encodedData.modules);
   currentEncodedData = encodedData;
-  setDataStatus(`Added ${encodedData.codewords.length} padded data codewords.`);
 
   return currentEncodedData;
 }
@@ -291,10 +344,6 @@ function encodeCurrentData() {
   }
 
   return encodedData;
-}
-
-function setDataStatus(message) {
-  dataStatus.textContent = message;
 }
 
 function updateDataCapacity() {

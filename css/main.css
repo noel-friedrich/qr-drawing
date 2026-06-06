@@ -290,11 +290,42 @@ textarea:focus-visible {
     border-left: 0;
     background: #fff;
     cursor: inherit;
+    transform-origin: center;
+}
+
+.cell.is-flipping {
+    animation: module-flip 180ms ease-in-out;
 }
 
 .cell.is-black {
     background: #000;
     z-index: 2;
+}
+
+.cell.is-flipping {
+    z-index: 4;
+}
+
+@keyframes module-flip {
+    0% {
+        background-color: var(--flip-from-color);
+        transform: scaleY(1);
+    }
+
+    50% {
+        background-color: var(--flip-from-color);
+        transform: scaleY(0);
+    }
+
+    50.01% {
+        background-color: var(--flip-to-color);
+        transform: scaleY(0);
+    }
+
+    100% {
+        background-color: var(--flip-to-color);
+        transform: scaleY(1);
+    }
 }
 
 .grid:not(.areas-visible) {

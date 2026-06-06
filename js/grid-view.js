@@ -1,7 +1,6 @@
 import { baseCellSize, overlayPalette } from "./config.js";
 
 export function createGridView(grid) {
-  const millisecondsPerPixel = 10;
   const overlayLayer = document.createElement("div");
   overlayLayer.className = "overlay-layer";
   const dataPositionLayer = document.createElement("div");
@@ -25,6 +24,9 @@ export function createGridView(grid) {
     cell.setAttribute("aria-label", `Pixel ${index + 1}`);
     cell.addEventListener("click", () => {
       setCellValue(cell, cell.dataset.value !== "dark");
+    });
+    cell.addEventListener("animationend", () => {
+      cell.classList.remove("is-flipping");
     });
     return cell;
   }
@@ -155,9 +157,19 @@ export function createGridView(grid) {
   }
 
   function setCellValue(cell, isBlack) {
+    const wasBlack = cell.dataset.value === "dark";
+    if (wasBlack === isBlack) {
+      return;
+    }
+
+    cell.style.setProperty("--flip-from-color", wasBlack ? "#000" : "#fff");
+    cell.style.setProperty("--flip-to-color", isBlack ? "#000" : "#fff");
     cell.dataset.value = isBlack ? "dark" : "light";
     cell.classList.toggle("is-black", isBlack);
     cell.style.backgroundColor = isBlack ? "#000" : "#fff";
+    cell.classList.remove("is-flipping");
+    void cell.offsetWidth;
+    cell.classList.add("is-flipping");
   }
 
   function setAreasVisible(isVisible) {
@@ -210,6 +222,8 @@ export function createGridView(grid) {
     }
 
     const startTime = performance.now();
+    const version = (gridSize - 17) / 4;
+    const millisecondsPerPixel = Math.max(11 - version, 2);
     const animationDuration = changes.length * millisecondsPerPixel;
     let appliedCount = 0;
 

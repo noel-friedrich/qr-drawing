@@ -120,9 +120,9 @@ export function createDataControls({ container, typeSelect }) {
       capacity.version,
       capacity.errorCorrectionLevel,
     );
-    const unit = type === "numeric" || type === "alphanumeric" ? "characters" : "bytes";
+    const current = getValueUnits(type, control.value);
 
-    hint.textContent = `${config.hint} Maximum: ${limit} ${unit}.`;
+    hint.textContent = `${config.hint} ${current}/${limit}`;
     control.setAttribute("aria-describedby", "data-field-hint");
     hint.id = "data-field-hint";
   }
@@ -163,4 +163,16 @@ function truncateUtf8(value, maximumBytes) {
   }
 
   return result;
+}
+
+function getValueUnits(type, value) {
+  if (type === "byte") {
+    return new TextEncoder().encode(value).length;
+  }
+
+  if (type === "binary") {
+    return Math.ceil(value.replace(/[^01]/g, "").length / 8);
+  }
+
+  return value.length;
 }
