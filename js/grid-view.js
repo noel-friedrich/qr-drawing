@@ -141,7 +141,7 @@ export function createGridView(grid) {
 
         const index = gridModule.y * gridSize + gridModule.x;
         const currentValue =
-          targetValues.get(index) ?? (cells[index].dataset.value === "dark");
+          targetValues.get(index) ?? cells[index].dataset.value === "dark";
         const nextValue =
           operation.type === "invert" ? !currentValue : gridModule.isBlack;
 
@@ -150,7 +150,10 @@ export function createGridView(grid) {
     }
 
     const changes = [...targetValues.entries()]
-      .filter(([index, isBlack]) => (cells[index].dataset.value === "dark") !== isBlack)
+      .filter(
+        ([index, isBlack]) =>
+          (cells[index].dataset.value === "dark") !== isBlack,
+      )
       .map(([index, isBlack]) => ({ index, isBlack }));
 
     return animateChanges(changes);
@@ -234,7 +237,10 @@ export function createGridView(grid) {
           return;
         }
 
-        const progress = Math.min(1, (timestamp - startTime) / animationDuration);
+        const progress = Math.min(
+          1,
+          (timestamp - startTime) / animationDuration,
+        );
         const targetCount = Math.min(
           changes.length,
           Math.floor(progress * changes.length),

@@ -15,7 +15,13 @@ import {
   getTimingPatternModules,
   getVersionInformationModules,
 } from "./fill-patterns.js";
-import { getLegendItems, getOverlayRects, getVersions, getVersionSpec, loadQrSpecification } from "./qr-spec.js";
+import {
+  getLegendItems,
+  getOverlayRects,
+  getVersions,
+  getVersionSpec,
+  loadQrSpecification,
+} from "./qr-spec.js";
 import { downloadQrPng } from "./png-export.js";
 import { createSidebar } from "./sidebar.js";
 import { createZoomPan } from "./zoom-pan.js";
@@ -28,23 +34,31 @@ const resetView = document.getElementById("reset-view");
 const openSidebar = document.getElementById("open-sidebar");
 const closeSidebar = document.getElementById("close-sidebar");
 const addData = document.getElementById("add-data");
-const addDataErrorCorrection = document.getElementById("add-data-error-correction");
+const addDataErrorCorrection = document.getElementById(
+  "add-data-error-correction",
+);
 const clearGrid = document.getElementById("clear-grid");
 const downloadPng = document.getElementById("download-png");
 const executeAllSteps = document.getElementById("execute-all-steps");
 const resetData = document.getElementById("reset-data");
 const fillErrorCorrection = document.getElementById("fill-error-correction");
-const fillFormatErrorCorrection = document.getElementById("fill-format-error-correction");
+const fillFormatErrorCorrection = document.getElementById(
+  "fill-format-error-correction",
+);
 const fillFinderPatterns = document.getElementById("fill-finder-patterns");
 const fillMaskIndicator = document.getElementById("fill-mask-indicator");
 const fillMaskPattern = document.getElementById("fill-mask-pattern");
 const fillTimingPatterns = document.getElementById("fill-timing-patterns");
-const fillVersionInformation = document.getElementById("fill-version-information");
+const fillVersionInformation = document.getElementById(
+  "fill-version-information",
+);
 const areaToggle = document.getElementById("area-toggle");
 const dataFieldContainer = document.getElementById("data-field-container");
 const dataPositionsToggle = document.getElementById("data-positions-toggle");
 const dataTypeSelect = document.getElementById("data-type-select");
-const errorCorrectionSelect = document.getElementById("error-correction-select");
+const errorCorrectionSelect = document.getElementById(
+  "error-correction-select",
+);
 const maskPatternSelect = document.getElementById("mask-pattern-select");
 const versionSelect = document.getElementById("version-select");
 const versionSummary = document.getElementById("version-summary");
@@ -237,8 +251,8 @@ fillErrorCorrection.addEventListener("click", () => {
       getErrorCorrectionLevelModules(
         currentVersionSpec,
         errorCorrectionSelect.value,
-        maskPatternSelect.value
-      )
+        maskPatternSelect.value,
+      ),
     );
   }
 });
@@ -248,14 +262,17 @@ fillMaskPattern.addEventListener("click", () => {
     animateGridOperations([
       {
         type: "invert",
-        modules: getMaskingPatternModules(currentVersionSpec, maskPatternSelect.value),
+        modules: getMaskingPatternModules(
+          currentVersionSpec,
+          maskPatternSelect.value,
+        ),
       },
       {
         type: "set",
         modules: getMaskingPatternIndicatorModules(
           currentVersionSpec,
           errorCorrectionSelect.value,
-          maskPatternSelect.value
+          maskPatternSelect.value,
         ),
       },
     ]);
@@ -268,8 +285,8 @@ fillMaskIndicator.addEventListener("click", () => {
       getMaskingPatternIndicatorModules(
         currentVersionSpec,
         errorCorrectionSelect.value,
-        maskPatternSelect.value
-      )
+        maskPatternSelect.value,
+      ),
     );
   }
 });
@@ -280,8 +297,8 @@ fillFormatErrorCorrection.addEventListener("click", () => {
       getFormatErrorCorrectionModules(
         currentVersionSpec,
         errorCorrectionSelect.value,
-        maskPatternSelect.value
-      )
+        maskPatternSelect.value,
+      ),
     );
   }
 });
@@ -340,7 +357,9 @@ function encodeCurrentData() {
   });
 
   if (encodedData.bits.length > encodedData.dataCapacityBits) {
-    throw new Error("Data does not fit in the selected version and error-correction level.");
+    throw new Error(
+      "Data does not fit in the selected version and error-correction level.",
+    );
   }
 
   return encodedData;

@@ -10,6 +10,9 @@ export function createZoomPan({
 }) {
   let zoom = 1;
   let panStart = null;
+  const touchPointers = new Map();
+  let touchPanStart = null;
+  let pinchStart = null;
 
   function getWorkspaceInsets() {
     const style = getComputedStyle(workspace);
@@ -126,6 +129,37 @@ export function createZoomPan({
   );
 
   workspace.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "touch") {
+      touchPointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      if (!workspace.hasPointerCapture(event.pointerId)) {
+        workspace.setPointerCapture(event.pointerId);
+      }
+
+      if (touchPointers.size === 1) {
+        touchPanStart = {
+          x: event.clientX,
+          y: event.clientY,
+          scrollLeft: workspace.scrollLeft,
+          scrollTop: workspace.scrollTop,
+          isDragging: false,
+        };
+      } else if (touchPointers.size === 2) {
+        const [first, second] = touchPointers.values();
+        pinchStart = {
+          distance: getPointerDistance(first, second),
+          zoom,
+        };
+        touchPanStart = null;
+        gridView.suppressClicksFor(250);
+      }
+
+      return;
+    }
+
     if (event.pointerType !== "mouse" || event.button !== 0) {
       return;
     }
@@ -141,6 +175,43 @@ export function createZoomPan({
   });
 
   workspace.addEventListener("pointermove", (event) => {
+    if (event.pointerType === "touch" && touchPointers.has(event.pointerId)) {
+      touchPointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      if (touchPointers.size >= 2 && pinchStart) {
+        const [first, second] = touchPointers.values();
+        const distance = getPointerDistance(first, second);
+        const midpoint = getPointerMidpoint(first, second);
+
+        if (pinchStart.distance > 0) {
+          zoomTo(pinchStart.zoom * (distance / pinchStart.distance), midpoint);
+        }
+
+        gridView.suppressClicksFor(250);
+        event.preventDefault();
+        return;
+      }
+
+      if (touchPointers.size === 1 && touchPanStart) {
+        const deltaX = event.clientX - touchPanStart.x;
+        const deltaY = event.clientY - touchPanStart.y;
+
+        if (deltaX !== 0 || deltaY !== 0) {
+          touchPanStart.isDragging = true;
+          gridView.suppressClicksFor(250);
+          workspace.scrollLeft = touchPanStart.scrollLeft - deltaX;
+          workspace.scrollTop = touchPanStart.scrollTop - deltaY;
+        }
+
+        event.preventDefault();
+      }
+
+      return;
+    }
+
     if (!panStart) {
       return;
     }
@@ -165,7 +236,12 @@ export function createZoomPan({
     event.preventDefault();
   });
 
-  workspace.addEventListener("pointerup", () => {
+  workspace.addEventListener("pointerup", (event) => {
+    if (event.pointerType === "touch") {
+      finishTouchPointer(event.pointerId);
+      return;
+    }
+
     if (!panStart) {
       return;
     }
@@ -178,7 +254,12 @@ export function createZoomPan({
     panStart = null;
   });
 
-  workspace.addEventListener("pointercancel", () => {
+  workspace.addEventListener("pointercancel", (event) => {
+    if (event.pointerType === "touch") {
+      finishTouchPointer(event.pointerId);
+      return;
+    }
+
     if (panStart?.isDragging) {
       gridView.suppressClicksFor(250);
     }
@@ -190,6 +271,50 @@ export function createZoomPan({
   window.addEventListener("resize", () => {
     applyZoom();
   });
+
+  workspace.addEventListener(
+    "gesturestart",
+    (event) => {
+      event.preventDefault();
+    },
+    { passive: false },
+  );
+
+  function finishTouchPointer(pointerId) {
+    const wasPinching = pinchStart !== null;
+    const wasDragging = touchPanStart?.isDragging;
+
+    touchPointers.delete(pointerId);
+
+    if (wasPinching || wasDragging) {
+      gridView.suppressClicksFor(250);
+    }
+
+    pinchStart = null;
+    touchPanStart = null;
+
+    if (touchPointers.size === 1) {
+      const [remainingPointer] = touchPointers.values();
+      touchPanStart = {
+        x: remainingPointer.x,
+        y: remainingPointer.y,
+        scrollLeft: workspace.scrollLeft,
+        scrollTop: workspace.scrollTop,
+        isDragging: false,
+      };
+    }
+  }
+
+  function getPointerDistance(first, second) {
+    return Math.hypot(second.x - first.x, second.y - first.y);
+  }
+
+  function getPointerMidpoint(first, second) {
+    return {
+      x: (first.x + second.x) / 2,
+      y: (first.y + second.y) / 2,
+    };
+  }
 
   return {
     fitToView,

@@ -5,18 +5,20 @@ const dataTypeConfig = {
     label: "Numeric data",
     hint: "Digits 0-9.",
     defaultValue: "67",
-    render: () => createInput({
-      inputMode: "numeric",
-      pattern: "[0-9]*",
-    }),
+    render: () =>
+      createInput({
+        inputMode: "numeric",
+        pattern: "[0-9]*",
+      }),
   },
   alphanumeric: {
     label: "Alphanumeric data",
     hint: "Uppercase QR alphanumeric characters: 0-9, A-Z, space, $, %, *, +, -, ., /, :.",
     defaultValue: "HELLO WORLD",
-    render: () => createInput({
-      autocapitalize: "characters",
-    }),
+    render: () =>
+      createInput({
+        autocapitalize: "characters",
+      }),
   },
   byte: {
     label: "Byte text",
@@ -100,7 +102,9 @@ export function createDataControls({ container, typeSelect }) {
 
     if (type === "alphanumeric") {
       return [...value]
-        .filter((character) => "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".includes(character))
+        .filter((character) =>
+          "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".includes(character),
+        )
         .join("")
         .slice(0, limit);
     }

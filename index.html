@@ -51,17 +51,24 @@
                 <div class="button-stack">
                     <button type="button" id="clear-grid">Clear pixels</button>
                     <button type="button" id="reset-data">Reset data</button>
-                    <button type="button" id="download-png">Download as PNG</button>
+                    <button type="button" id="download-png">
+                        Download as PNG
+                    </button>
                 </div>
             </div>
 
             <div class="sidebar-section">
-                <button type="button" id="execute-all-steps">Execute all Steps</button>
+                <button type="button" id="execute-all-steps">
+                    Execute all Steps
+                </button>
             </div>
 
             <div class="sidebar-section">
                 <h2>Step 1: Set Finder Patterns</h2>
-                <p>Place the three finder patterns and any alignment patterns required by the selected QR version.</p>
+                <p>
+                    Place the three finder patterns and any alignment patterns
+                    required by the selected QR version.
+                </p>
                 <button type="button" id="fill-finder-patterns">
                     Fill finder and alignment patterns
                 </button>
@@ -72,7 +79,10 @@
 
             <div class="sidebar-section">
                 <h2>Step 2: Set Timing Patterns</h2>
-                <p>Place the alternating timing modules between the finder patterns so the grid spacing can be read.</p>
+                <p>
+                    Place the alternating timing modules between the finder
+                    patterns so the grid spacing can be read.
+                </p>
                 <button type="button" id="fill-timing-patterns">
                     Fill timing patterns
                 </button>
@@ -80,7 +90,10 @@
 
             <div class="sidebar-section">
                 <h2>Step 3: Set Error Correction</h2>
-                <p>Choose the QR error correction level and write its format-information indicator bits.</p>
+                <p>
+                    Choose the QR error correction level and write its
+                    format-information indicator bits.
+                </p>
                 <label class="field sidebar-field">
                     <span>Error correction level</span>
                     <select id="error-correction-select">
@@ -98,9 +111,10 @@
             <div class="sidebar-section">
                 <h2>Step 4: Set Format Error Correction</h2>
                 <p>
-                    Write the format check bits for the selected error correction level and masking pattern.
-                    This also includes the masking pattern indicator, because both values are protected together
-                    in the 15-bit QR format information.
+                    Write the format check bits for the selected error
+                    correction level and masking pattern. This also includes the
+                    masking pattern indicator, because both values are protected
+                    together in the 15-bit QR format information.
                 </p>
                 <label class="field sidebar-field">
                     <span>Masking pattern</span>
@@ -127,12 +141,17 @@
 
             <div class="sidebar-section">
                 <h2>Step 5: Set Data</h2>
-                <p>Encode the selected input and fill the complete data-codeword area with payload, terminator, and pad bytes.</p>
+                <p>
+                    Encode the selected input and fill the complete
+                    data-codeword area with payload, terminator, and pad bytes.
+                </p>
                 <label class="field">
                     <span>Data type</span>
                     <select id="data-type-select">
                         <option value="numeric">Numeric</option>
-                        <option value="alphanumeric" selected>Alphanumeric</option>
+                        <option value="alphanumeric" selected>
+                            Alphanumeric
+                        </option>
                         <option value="byte">Byte text</option>
                         <option value="binary">Binary bytes</option>
                     </select>
@@ -143,7 +162,10 @@
 
             <div class="sidebar-section">
                 <h2>Step 6: Set Error Correction</h2>
-                <p>Generate and place the Reed-Solomon error correction codewords for the padded data blocks.</p>
+                <p>
+                    Generate and place the Reed-Solomon error correction
+                    codewords for the padded data blocks.
+                </p>
                 <button type="button" id="add-data-error-correction">
                     Add error correction
                 </button>
@@ -151,12 +173,14 @@
 
             <div class="sidebar-section">
                 <h2>Step 7: Apply Chosen Masking Pattern</h2>
-                <p>Invert data and error-correction modules according to the selected masking pattern.</p>
+                <p>
+                    Invert data and error-correction modules according to the
+                    selected masking pattern.
+                </p>
                 <button type="button" id="fill-mask-pattern">
                     Fill masking pattern
                 </button>
             </div>
-
         </aside>
 
         <div class="controls" aria-label="View controls">
@@ -166,10 +190,14 @@
         </div>
 
         <main class="workspace" id="workspace">
-            <ul class="legend workspace-legend" id="overlay-legend" aria-label="Special areas"></ul>
+            <ul
+                class="legend workspace-legend"
+                id="overlay-legend"
+                aria-label="Special areas"
+            ></ul>
             <div class="grid" id="grid" aria-label="21 by 21 pixel grid"></div>
         </main>
 
-        <script type="module" src="js/main.js"></script>
+        <script type="module" src="js/main.js?t=0"></script>
     </body>
 </html>

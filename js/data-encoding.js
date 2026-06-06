@@ -7,119 +7,265 @@ const modeIndicators = {
 };
 const blockInfo = {
   1: {
-    L: { dataCodewords: 19, ecCodewordsPerBlock: 7, groups: [{ blocks: 1, dataCodewords: 19 }] },
-    M: { dataCodewords: 16, ecCodewordsPerBlock: 10, groups: [{ blocks: 1, dataCodewords: 16 }] },
-    Q: { dataCodewords: 13, ecCodewordsPerBlock: 13, groups: [{ blocks: 1, dataCodewords: 13 }] },
-    H: { dataCodewords: 9, ecCodewordsPerBlock: 17, groups: [{ blocks: 1, dataCodewords: 9 }] },
+    L: {
+      dataCodewords: 19,
+      ecCodewordsPerBlock: 7,
+      groups: [{ blocks: 1, dataCodewords: 19 }],
+    },
+    M: {
+      dataCodewords: 16,
+      ecCodewordsPerBlock: 10,
+      groups: [{ blocks: 1, dataCodewords: 16 }],
+    },
+    Q: {
+      dataCodewords: 13,
+      ecCodewordsPerBlock: 13,
+      groups: [{ blocks: 1, dataCodewords: 13 }],
+    },
+    H: {
+      dataCodewords: 9,
+      ecCodewordsPerBlock: 17,
+      groups: [{ blocks: 1, dataCodewords: 9 }],
+    },
   },
   2: {
-    L: { dataCodewords: 34, ecCodewordsPerBlock: 10, groups: [{ blocks: 1, dataCodewords: 34 }] },
-    M: { dataCodewords: 28, ecCodewordsPerBlock: 16, groups: [{ blocks: 1, dataCodewords: 28 }] },
-    Q: { dataCodewords: 22, ecCodewordsPerBlock: 22, groups: [{ blocks: 1, dataCodewords: 22 }] },
-    H: { dataCodewords: 16, ecCodewordsPerBlock: 28, groups: [{ blocks: 1, dataCodewords: 16 }] },
+    L: {
+      dataCodewords: 34,
+      ecCodewordsPerBlock: 10,
+      groups: [{ blocks: 1, dataCodewords: 34 }],
+    },
+    M: {
+      dataCodewords: 28,
+      ecCodewordsPerBlock: 16,
+      groups: [{ blocks: 1, dataCodewords: 28 }],
+    },
+    Q: {
+      dataCodewords: 22,
+      ecCodewordsPerBlock: 22,
+      groups: [{ blocks: 1, dataCodewords: 22 }],
+    },
+    H: {
+      dataCodewords: 16,
+      ecCodewordsPerBlock: 28,
+      groups: [{ blocks: 1, dataCodewords: 16 }],
+    },
   },
   3: {
-    L: { dataCodewords: 55, ecCodewordsPerBlock: 15, groups: [{ blocks: 1, dataCodewords: 55 }] },
-    M: { dataCodewords: 44, ecCodewordsPerBlock: 26, groups: [{ blocks: 1, dataCodewords: 44 }] },
-    Q: { dataCodewords: 34, ecCodewordsPerBlock: 18, groups: [{ blocks: 2, dataCodewords: 17 }] },
-    H: { dataCodewords: 26, ecCodewordsPerBlock: 22, groups: [{ blocks: 2, dataCodewords: 13 }] },
+    L: {
+      dataCodewords: 55,
+      ecCodewordsPerBlock: 15,
+      groups: [{ blocks: 1, dataCodewords: 55 }],
+    },
+    M: {
+      dataCodewords: 44,
+      ecCodewordsPerBlock: 26,
+      groups: [{ blocks: 1, dataCodewords: 44 }],
+    },
+    Q: {
+      dataCodewords: 34,
+      ecCodewordsPerBlock: 18,
+      groups: [{ blocks: 2, dataCodewords: 17 }],
+    },
+    H: {
+      dataCodewords: 26,
+      ecCodewordsPerBlock: 22,
+      groups: [{ blocks: 2, dataCodewords: 13 }],
+    },
   },
   4: {
-    L: { dataCodewords: 80, ecCodewordsPerBlock: 20, groups: [{ blocks: 1, dataCodewords: 80 }] },
-    M: { dataCodewords: 64, ecCodewordsPerBlock: 18, groups: [{ blocks: 2, dataCodewords: 32 }] },
-    Q: { dataCodewords: 48, ecCodewordsPerBlock: 26, groups: [{ blocks: 2, dataCodewords: 24 }] },
-    H: { dataCodewords: 36, ecCodewordsPerBlock: 16, groups: [{ blocks: 4, dataCodewords: 9 }] },
+    L: {
+      dataCodewords: 80,
+      ecCodewordsPerBlock: 20,
+      groups: [{ blocks: 1, dataCodewords: 80 }],
+    },
+    M: {
+      dataCodewords: 64,
+      ecCodewordsPerBlock: 18,
+      groups: [{ blocks: 2, dataCodewords: 32 }],
+    },
+    Q: {
+      dataCodewords: 48,
+      ecCodewordsPerBlock: 26,
+      groups: [{ blocks: 2, dataCodewords: 24 }],
+    },
+    H: {
+      dataCodewords: 36,
+      ecCodewordsPerBlock: 16,
+      groups: [{ blocks: 4, dataCodewords: 9 }],
+    },
   },
   5: {
-    L: { dataCodewords: 108, ecCodewordsPerBlock: 26, groups: [{ blocks: 1, dataCodewords: 108 }] },
-    M: { dataCodewords: 86, ecCodewordsPerBlock: 24, groups: [{ blocks: 2, dataCodewords: 43 }] },
+    L: {
+      dataCodewords: 108,
+      ecCodewordsPerBlock: 26,
+      groups: [{ blocks: 1, dataCodewords: 108 }],
+    },
+    M: {
+      dataCodewords: 86,
+      ecCodewordsPerBlock: 24,
+      groups: [{ blocks: 2, dataCodewords: 43 }],
+    },
     Q: {
       dataCodewords: 62,
       ecCodewordsPerBlock: 18,
-      groups: [{ blocks: 2, dataCodewords: 15 }, { blocks: 2, dataCodewords: 16 }],
+      groups: [
+        { blocks: 2, dataCodewords: 15 },
+        { blocks: 2, dataCodewords: 16 },
+      ],
     },
     H: {
       dataCodewords: 46,
       ecCodewordsPerBlock: 22,
-      groups: [{ blocks: 2, dataCodewords: 11 }, { blocks: 2, dataCodewords: 12 }],
+      groups: [
+        { blocks: 2, dataCodewords: 11 },
+        { blocks: 2, dataCodewords: 12 },
+      ],
     },
   },
   6: {
-    L: { dataCodewords: 136, ecCodewordsPerBlock: 18, groups: [{ blocks: 2, dataCodewords: 68 }] },
-    M: { dataCodewords: 108, ecCodewordsPerBlock: 16, groups: [{ blocks: 4, dataCodewords: 27 }] },
-    Q: { dataCodewords: 76, ecCodewordsPerBlock: 24, groups: [{ blocks: 4, dataCodewords: 19 }] },
-    H: { dataCodewords: 60, ecCodewordsPerBlock: 28, groups: [{ blocks: 4, dataCodewords: 15 }] },
+    L: {
+      dataCodewords: 136,
+      ecCodewordsPerBlock: 18,
+      groups: [{ blocks: 2, dataCodewords: 68 }],
+    },
+    M: {
+      dataCodewords: 108,
+      ecCodewordsPerBlock: 16,
+      groups: [{ blocks: 4, dataCodewords: 27 }],
+    },
+    Q: {
+      dataCodewords: 76,
+      ecCodewordsPerBlock: 24,
+      groups: [{ blocks: 4, dataCodewords: 19 }],
+    },
+    H: {
+      dataCodewords: 60,
+      ecCodewordsPerBlock: 28,
+      groups: [{ blocks: 4, dataCodewords: 15 }],
+    },
   },
   7: {
-    L: { dataCodewords: 156, ecCodewordsPerBlock: 20, groups: [{ blocks: 2, dataCodewords: 78 }] },
-    M: { dataCodewords: 124, ecCodewordsPerBlock: 18, groups: [{ blocks: 4, dataCodewords: 31 }] },
+    L: {
+      dataCodewords: 156,
+      ecCodewordsPerBlock: 20,
+      groups: [{ blocks: 2, dataCodewords: 78 }],
+    },
+    M: {
+      dataCodewords: 124,
+      ecCodewordsPerBlock: 18,
+      groups: [{ blocks: 4, dataCodewords: 31 }],
+    },
     Q: {
       dataCodewords: 88,
       ecCodewordsPerBlock: 18,
-      groups: [{ blocks: 2, dataCodewords: 14 }, { blocks: 4, dataCodewords: 15 }],
+      groups: [
+        { blocks: 2, dataCodewords: 14 },
+        { blocks: 4, dataCodewords: 15 },
+      ],
     },
     H: {
       dataCodewords: 66,
       ecCodewordsPerBlock: 26,
-      groups: [{ blocks: 4, dataCodewords: 13 }, { blocks: 1, dataCodewords: 14 }],
+      groups: [
+        { blocks: 4, dataCodewords: 13 },
+        { blocks: 1, dataCodewords: 14 },
+      ],
     },
   },
   8: {
-    L: { dataCodewords: 194, ecCodewordsPerBlock: 24, groups: [{ blocks: 2, dataCodewords: 97 }] },
+    L: {
+      dataCodewords: 194,
+      ecCodewordsPerBlock: 24,
+      groups: [{ blocks: 2, dataCodewords: 97 }],
+    },
     M: {
       dataCodewords: 154,
       ecCodewordsPerBlock: 22,
-      groups: [{ blocks: 2, dataCodewords: 38 }, { blocks: 2, dataCodewords: 39 }],
+      groups: [
+        { blocks: 2, dataCodewords: 38 },
+        { blocks: 2, dataCodewords: 39 },
+      ],
     },
     Q: {
       dataCodewords: 110,
       ecCodewordsPerBlock: 22,
-      groups: [{ blocks: 4, dataCodewords: 18 }, { blocks: 2, dataCodewords: 19 }],
+      groups: [
+        { blocks: 4, dataCodewords: 18 },
+        { blocks: 2, dataCodewords: 19 },
+      ],
     },
     H: {
       dataCodewords: 86,
       ecCodewordsPerBlock: 26,
-      groups: [{ blocks: 4, dataCodewords: 14 }, { blocks: 2, dataCodewords: 15 }],
+      groups: [
+        { blocks: 4, dataCodewords: 14 },
+        { blocks: 2, dataCodewords: 15 },
+      ],
     },
   },
   9: {
-    L: { dataCodewords: 232, ecCodewordsPerBlock: 30, groups: [{ blocks: 2, dataCodewords: 116 }] },
+    L: {
+      dataCodewords: 232,
+      ecCodewordsPerBlock: 30,
+      groups: [{ blocks: 2, dataCodewords: 116 }],
+    },
     M: {
       dataCodewords: 182,
       ecCodewordsPerBlock: 22,
-      groups: [{ blocks: 3, dataCodewords: 36 }, { blocks: 2, dataCodewords: 37 }],
+      groups: [
+        { blocks: 3, dataCodewords: 36 },
+        { blocks: 2, dataCodewords: 37 },
+      ],
     },
     Q: {
       dataCodewords: 132,
       ecCodewordsPerBlock: 20,
-      groups: [{ blocks: 4, dataCodewords: 16 }, { blocks: 4, dataCodewords: 17 }],
+      groups: [
+        { blocks: 4, dataCodewords: 16 },
+        { blocks: 4, dataCodewords: 17 },
+      ],
     },
     H: {
       dataCodewords: 100,
       ecCodewordsPerBlock: 24,
-      groups: [{ blocks: 4, dataCodewords: 12 }, { blocks: 4, dataCodewords: 13 }],
+      groups: [
+        { blocks: 4, dataCodewords: 12 },
+        { blocks: 4, dataCodewords: 13 },
+      ],
     },
   },
   10: {
     L: {
       dataCodewords: 274,
       ecCodewordsPerBlock: 18,
-      groups: [{ blocks: 2, dataCodewords: 68 }, { blocks: 2, dataCodewords: 69 }],
+      groups: [
+        { blocks: 2, dataCodewords: 68 },
+        { blocks: 2, dataCodewords: 69 },
+      ],
     },
     M: {
       dataCodewords: 216,
       ecCodewordsPerBlock: 26,
-      groups: [{ blocks: 4, dataCodewords: 43 }, { blocks: 1, dataCodewords: 44 }],
+      groups: [
+        { blocks: 4, dataCodewords: 43 },
+        { blocks: 1, dataCodewords: 44 },
+      ],
     },
     Q: {
       dataCodewords: 154,
       ecCodewordsPerBlock: 24,
-      groups: [{ blocks: 6, dataCodewords: 19 }, { blocks: 2, dataCodewords: 20 }],
+      groups: [
+        { blocks: 6, dataCodewords: 19 },
+        { blocks: 2, dataCodewords: 20 },
+      ],
     },
     H: {
       dataCodewords: 122,
       ecCodewordsPerBlock: 28,
-      groups: [{ blocks: 6, dataCodewords: 15 }, { blocks: 2, dataCodewords: 16 }],
+      groups: [
+        { blocks: 6, dataCodewords: 15 },
+        { blocks: 2, dataCodewords: 16 },
+      ],
     },
   },
 };
@@ -137,7 +283,8 @@ const remainderBitsByVersion = {
 };
 
 export function getDataInputLimit(type, version, errorCorrectionLevel) {
-  const capacityBits = getBlockInfo(version, errorCorrectionLevel).dataCodewords * 8;
+  const capacityBits =
+    getBlockInfo(version, errorCorrectionLevel).dataCodewords * 8;
   const characterCountBits =
     version <= 9
       ? { numeric: 10, alphanumeric: 9, byte: 8, binary: 8 }
@@ -199,15 +346,21 @@ function getMaximumUnits(capacityBits, getRequiredBits) {
   return count;
 }
 
-export function encodeDataErrorCorrection({ dataBlocks, versionSpec, errorCorrectionLevel }) {
+export function encodeDataErrorCorrection({
+  dataBlocks,
+  versionSpec,
+  errorCorrectionLevel,
+}) {
   const info = getBlockInfo(versionSpec.version, errorCorrectionLevel);
   const errorCorrectionBlocks = dataBlocks.map((block) =>
-    getReedSolomonRemainder(block, info.ecCodewordsPerBlock)
+    getReedSolomonRemainder(block, info.ecCodewordsPerBlock),
   );
   const errorCorrectionCodewords = interleaveBlocks(errorCorrectionBlocks);
   const errorCorrectionBits = codewordsToBits(errorCorrectionCodewords);
   const path = getDataModulePath(versionSpec);
-  const remainderBits = Array(remainderBitsByVersion[versionSpec.version]).fill("0");
+  const remainderBits = Array(remainderBitsByVersion[versionSpec.version]).fill(
+    "0",
+  );
 
   return {
     bits: errorCorrectionBits,
@@ -216,7 +369,7 @@ export function encodeDataErrorCorrection({ dataBlocks, versionSpec, errorCorrec
     remainderModules: bitsToModules(
       remainderBits,
       path,
-      (info.dataCodewords + errorCorrectionCodewords.length) * 8
+      (info.dataCodewords + errorCorrectionCodewords.length) * 8,
     ),
   };
 }
@@ -230,7 +383,9 @@ function finalizeDataCodewords(rawBits, dataCodewordCapacity) {
   const bits = [...rawBits];
 
   if (bits.length > capacityBits) {
-    throw new Error("Data does not fit in the selected version and error-correction level.");
+    throw new Error(
+      "Data does not fit in the selected version and error-correction level.",
+    );
   }
 
   const terminatorLength = Math.min(4, capacityBits - bits.length);
@@ -379,12 +534,20 @@ function getDataModulePath(versionSpec) {
   const path = [];
   let upward = true;
 
-  for (let rightColumn = versionSpec.module_count - 1; rightColumn > 0; rightColumn -= 2) {
+  for (
+    let rightColumn = versionSpec.module_count - 1;
+    rightColumn > 0;
+    rightColumn -= 2
+  ) {
     if (rightColumn === 6) {
       rightColumn -= 1;
     }
 
-    for (let rowOffset = 0; rowOffset < versionSpec.module_count; rowOffset += 1) {
+    for (
+      let rowOffset = 0;
+      rowOffset < versionSpec.module_count;
+      rowOffset += 1
+    ) {
       const y = upward ? versionSpec.module_count - 1 - rowOffset : rowOffset;
 
       for (const x of [rightColumn, rightColumn - 1]) {
@@ -420,7 +583,15 @@ function bitsToCodewords(bits) {
   const codewords = [];
 
   for (let index = 0; index < bits.length; index += 8) {
-    codewords.push(Number.parseInt(bits.slice(index, index + 8).join("").padEnd(8, "0"), 2));
+    codewords.push(
+      Number.parseInt(
+        bits
+          .slice(index, index + 8)
+          .join("")
+          .padEnd(8, "0"),
+        2,
+      ),
+    );
   }
 
   return codewords;
@@ -436,7 +607,10 @@ function toBits(value, bitLength) {
 
 function getReedSolomonRemainder(dataCodewords, errorCorrectionCodewordCount) {
   const generator = getGeneratorPolynomial(errorCorrectionCodewordCount);
-  const message = [...dataCodewords, ...Array(errorCorrectionCodewordCount).fill(0)];
+  const message = [
+    ...dataCodewords,
+    ...Array(errorCorrectionCodewordCount).fill(0),
+  ];
 
   for (let index = 0; index < dataCodewords.length; index += 1) {
     const factor = message[index];
@@ -444,8 +618,15 @@ function getReedSolomonRemainder(dataCodewords, errorCorrectionCodewordCount) {
       continue;
     }
 
-    for (let generatorIndex = 0; generatorIndex < generator.length; generatorIndex += 1) {
-      message[index + generatorIndex] ^= gfMultiply(generator[generatorIndex], factor);
+    for (
+      let generatorIndex = 0;
+      generatorIndex < generator.length;
+      generatorIndex += 1
+    ) {
+      message[index + generatorIndex] ^= gfMultiply(
+        generator[generatorIndex],
+        factor,
+      );
     }
   }
 
@@ -467,7 +648,10 @@ function multiplyPolynomials(first, second) {
 
   for (let firstIndex = 0; firstIndex < first.length; firstIndex += 1) {
     for (let secondIndex = 0; secondIndex < second.length; secondIndex += 1) {
-      result[firstIndex + secondIndex] ^= gfMultiply(first[firstIndex], second[secondIndex]);
+      result[firstIndex + secondIndex] ^= gfMultiply(
+        first[firstIndex],
+        second[secondIndex],
+      );
     }
   }
 

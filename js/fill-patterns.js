@@ -58,7 +58,10 @@ export function getVersionInformationModules(versionSpec) {
   const bits = getVersionBits(versionSpec.version);
 
   return [...versionSpec.zones.version_information_bits]
-    .sort((first, second) => first.version_string_msb_index - second.version_string_msb_index)
+    .sort(
+      (first, second) =>
+        first.version_string_msb_index - second.version_string_msb_index,
+    )
     .flatMap((entry) =>
       entry.instances.map((instance) => ({
         x: instance.x,
@@ -89,21 +92,21 @@ export function getTimingPatternModules(versionSpec) {
 export function getErrorCorrectionLevelModules(versionSpec, level, pattern) {
   return getFormatFieldModules(
     versionSpec.zones.error_correction_level_indicator,
-    getFormatBits(level, pattern)
+    getFormatBits(level, pattern),
   );
 }
 
 export function getMaskingPatternIndicatorModules(versionSpec, level, pattern) {
   return getFormatFieldModules(
     versionSpec.zones.masking_pattern_indicator,
-    getFormatBits(level, pattern)
+    getFormatBits(level, pattern),
   );
 }
 
 export function getFormatErrorCorrectionModules(versionSpec, level, pattern) {
   return getFormatFieldModules(
     versionSpec.zones.format_bch_error_correction,
-    getFormatBits(level, pattern)
+    getFormatBits(level, pattern),
   );
 }
 
@@ -112,7 +115,10 @@ export function getMaskingPatternModules(versionSpec, pattern) {
   const modules = [];
   const patternIndex = Number(pattern);
 
-  for (const { x, y } of getDataPath(versionSpec.module_count, reservedModules)) {
+  for (const { x, y } of getDataPath(
+    versionSpec.module_count,
+    reservedModules,
+  )) {
     if (isMaskModuleDark(patternIndex, x, y)) {
       modules.push({ x, y });
     }
@@ -124,11 +130,13 @@ export function getMaskingPatternModules(versionSpec, pattern) {
 export function getDataResetModules(versionSpec) {
   const reservedModules = getReservedModules(versionSpec);
 
-  return getDataPath(versionSpec.module_count, reservedModules).map(({ x, y }) => ({
-    x,
-    y,
-    isBlack: false,
-  }));
+  return getDataPath(versionSpec.module_count, reservedModules).map(
+    ({ x, y }) => ({
+      x,
+      y,
+      isBlack: false,
+    }),
+  );
 }
 
 function isFinderPatternDark(x, y) {
@@ -193,13 +201,16 @@ function getRingCoordinates(x, y, width, height) {
 
 function getFormatFieldModules(entries, bits) {
   return [...entries]
-    .sort((first, second) => first.format_string_msb_index - second.format_string_msb_index)
+    .sort(
+      (first, second) =>
+        first.format_string_msb_index - second.format_string_msb_index,
+    )
     .flatMap((entry) =>
       entry.instances.map((instance) => ({
         x: instance.x,
         y: instance.y,
         isBlack: bits[entry.format_string_msb_index] === "1",
-      }))
+      })),
     );
 }
 
@@ -234,9 +245,7 @@ function getVersionBits(version) {
     }
   }
 
-  return (unprotectedValue | (remainder & 0xfff))
-    .toString(2)
-    .padStart(18, "0");
+  return (unprotectedValue | (remainder & 0xfff)).toString(2).padStart(18, "0");
 }
 
 function getReservedModules(versionSpec) {
