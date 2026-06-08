@@ -2,13 +2,14 @@ export function createSidebar({
   closeButton,
   legendList,
   openButton,
-  summary,
   versionSelect,
 }) {
   function setOpen(isOpen) {
     document.body.classList.toggle("sidebar-is-open", isOpen);
     openButton.setAttribute("aria-expanded", String(isOpen));
   }
+
+  setOpen(window.matchMedia("(max-width: 767px)").matches);
 
   openButton.addEventListener("click", () => {
     setOpen(true);
@@ -39,10 +40,6 @@ export function createSidebar({
     versionSelect.value = String(version);
   }
 
-  function renderSummary(versionSpec) {
-    summary.textContent = `Version ${versionSpec.version}, ${versionSpec.module_count} x ${versionSpec.module_count} modules.`;
-  }
-
   function renderLegend(items) {
     legendList.replaceChildren();
 
@@ -63,7 +60,7 @@ export function createSidebar({
   }
 
   function renderError(message) {
-    summary.textContent = message;
+    console.error(message);
     versionSelect.disabled = true;
     legendList.replaceChildren();
   }
@@ -73,7 +70,6 @@ export function createSidebar({
     populateVersions,
     renderError,
     renderLegend,
-    renderSummary,
     setSelectedVersion,
   };
 }

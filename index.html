@@ -47,7 +47,23 @@
 
             <div class="sidebar-section">
                 <h1>QR Studio</h1>
-                <p id="version-summary">Loading QR specification...</p>
+                <p>
+                    This QR Studio let's you draw a QR code step-by-step. Click
+                    individual pixels to flip them directly or use the buttons
+                    inside this menu to fill entire sections according to your
+                    choice. After you executed all steps (in the correct
+                    order!), you can scan the QR code using any available
+                    scannar.
+                </p>
+                <p>
+                    I made this app to learn to draw the QR codes myself. The
+                    hard part lies in correctly calculating the Reed-Solomon
+                    Error-Correction bits. To learn more about these, I lazily
+                    vibecoded
+                    <a href="reed-solomon/">a small notebook</a>
+                    to help learn the complicated calculation (at least for
+                    Version 1 QR codes with Low EC).
+                </p>
                 <div class="button-stack">
                     <button type="button" id="clear-grid">
                         Clear everything

@@ -61,7 +61,6 @@ const errorCorrectionSelect = document.getElementById(
 );
 const maskPatternSelect = document.getElementById("mask-pattern-select");
 const versionSelect = document.getElementById("version-select");
-const versionSummary = document.getElementById("version-summary");
 const overlayLegend = document.getElementById("overlay-legend");
 
 let currentVersionSpec = null;
@@ -84,7 +83,6 @@ const sidebar = createSidebar({
   closeButton: closeSidebar,
   legendList: overlayLegend,
   openButton: openSidebar,
-  summary: versionSummary,
   versionSelect,
 });
 
@@ -328,7 +326,6 @@ function applyVersion(specification, version) {
   fillVersionInformation.hidden = versionSpec.version < 7;
   updateDataCapacity();
   sidebar.setSelectedVersion(version);
-  sidebar.renderSummary(versionSpec);
   sidebar.renderLegend(getLegendItems(versionSpec));
   gridView.setGridSize(versionSpec.module_count);
   gridView.setDataPositions(getDataModulePositions(versionSpec));
@@ -391,7 +388,7 @@ async function animateGridOperations(operations) {
     openSidebar.setAttribute("aria-expanded", "false");
   }
 
-  const buttons = [...document.querySelectorAll("button:not(.cell)")];
+  const buttons = [...document.querySelectorAll("#sidebar button")];
   const previousDisabledStates = buttons.map((button) => button.disabled);
 
   buttons.forEach((button) => {

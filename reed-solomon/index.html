@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>QR Version 1-L by Hand</title>
+        <style>
+            :root {
+                color-scheme: light;
+                --ink: #17202a;
+                --muted: #59636e;
+                --line: #ccd2d8;
+                --soft-line: #e5e8eb;
+                --paper: #ffffff;
+                --surface: #f4f6f7;
+                --blue: #145ea8;
+                --blue-soft: #e8f1fb;
+                --green: #18794e;
+                --green-soft: #e8f5ee;
+                --red: #b42318;
+                --red-soft: #fff0ee;
+                --amber: #855d00;
+                --amber-soft: #fff5d6;
+                --violet: #6840a0;
+                --violet-soft: #f1eafa;
+                --cell-size: 23px;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html {
+                background: var(--surface);
+                color: var(--ink);
+                font-family:
+                    Inter,
+                    ui-sans-serif,
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                line-height: 1.45;
+            }
+
+            body {
+                margin: 0;
+                min-width: 320px;
+            }
+
+            button,
+            input,
+            select {
+                font: inherit;
+            }
+
+            button {
+                min-height: 38px;
+                border: 1px solid #9aa4ad;
+                border-radius: 6px;
+                background: var(--paper);
+                color: var(--ink);
+                padding: 7px 12px;
+                cursor: pointer;
+            }
+
+            button:hover {
+                border-color: var(--blue);
+                color: var(--blue);
+            }
+
+            button:focus-visible,
+            input:focus-visible,
+            .qr-cell:focus-visible {
+                outline: 3px solid rgba(20, 94, 168, 0.25);
+                outline-offset: 2px;
+            }
+
+            .page-header {
+                border-bottom: 1px solid var(--line);
+                background: var(--paper);
+            }
+
+            .header-inner,
+            main {
+                width: min(1380px, calc(100% - 32px));
+                margin: 0 auto;
+            }
+
+            .header-inner {
+                padding: 26px 0 22px;
+            }
+
+            h1,
+            h2,
+            h3,
+            p {
+                margin-top: 0;
+            }
+
+            h1 {
+                margin-bottom: 6px;
+                font-size: 28px;
+                line-height: 1.2;
+                letter-spacing: 0;
+            }
+
+            h2 {
+                margin-bottom: 8px;
+                font-size: 20px;
+                letter-spacing: 0;
+            }
+
+            h3 {
+                margin-bottom: 8px;
+                font-size: 15px;
+                letter-spacing: 0;
+            }
+
+            .lede,
+            .section-copy,
+            .muted {
+                color: var(--muted);
+            }
+
+            .lede {
+                max-width: 820px;
+                margin-bottom: 0;
+            }
+
+            main {
+                padding: 24px 0 48px;
+            }
+
+            .input-panel {
+                display: grid;
+                grid-template-columns: minmax(260px, 1fr) auto;
+                gap: 16px;
+                align-items: end;
+                padding-bottom: 24px;
+            }
+
+            .field label {
+                display: block;
+                margin-bottom: 6px;
+                font-weight: 700;
+            }
+
+            .field input,
+            .field select {
+                width: 100%;
+                min-height: 44px;
+                border: 1px solid #8f99a3;
+                border-radius: 6px;
+                background: var(--paper);
+                padding: 9px 11px;
+                color: var(--ink);
+            }
+
+            .field input {
+                font-family:
+                    "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            }
+
+            .input-fields {
+                display: grid;
+                grid-template-columns: 190px minmax(240px, 1fr);
+                gap: 12px;
+                align-items: end;
+            }
+
+            .field-note {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                margin-top: 6px;
+                color: var(--muted);
+                font-size: 13px;
+            }
+
+            .error-box {
+                margin-top: 10px;
+                border-left: 4px solid var(--red);
+                background: var(--red-soft);
+                padding: 9px 12px;
+                color: var(--red);
+                font-weight: 650;
+            }
+
+            .error-box[hidden],
+            #results[hidden] {
+                display: none;
+            }
+
+            .section {
+                border-top: 1px solid var(--line);
+                padding: 26px 0 30px;
+            }
+
+            .section-heading {
+                display: grid;
+                grid-template-columns: 34px minmax(0, 1fr);
+                gap: 12px;
+                align-items: start;
+                margin-bottom: 18px;
+            }
+
+            .section-letter {
+                display: grid;
+                width: 30px;
+                height: 30px;
+                place-items: center;
+                border-radius: 50%;
+                background: var(--ink);
+                color: white;
+                font-weight: 800;
+            }
+
+            .section-copy {
+                margin-bottom: 0;
+            }
+
+            .summary-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 1px;
+                overflow: hidden;
+                border: 1px solid var(--line);
+                background: var(--line);
+                margin: 16px 0;
+            }
+
+            .summary-item {
+                min-width: 0;
+                background: var(--paper);
+                padding: 12px 14px;
+            }
+
+            .summary-label {
+                display: block;
+                margin-bottom: 4px;
+                color: var(--muted);
+                font-size: 12px;
+                font-weight: 750;
+                text-transform: uppercase;
+            }
+
+            .mono,
+            code,
+            th,
+            td.mono {
+                font-family:
+                    "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            }
+
+            .bit-block,
+            .codeword-block {
+                overflow-wrap: anywhere;
+                border-left: 4px solid var(--blue);
+                background: var(--blue-soft);
+                padding: 12px 14px;
+                line-height: 1.75;
+            }
+
+            .codeword-block {
+                border-color: var(--violet);
+                background: var(--violet-soft);
+                font-weight: 700;
+            }
+
+            .table-wrap {
+                width: 100%;
+                overflow-x: auto;
+                border: 1px solid var(--line);
+                background: var(--paper);
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+
+            th,
+            td {
+                border-bottom: 1px solid var(--soft-line);
+                padding: 9px 10px;
+                text-align: left;
+                vertical-align: top;
+                white-space: nowrap;
+            }
+
+            th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                background: #e9edf0;
+                color: #303943;
+                font-size: 12px;
+            }
+
+            tbody tr:last-child td {
+                border-bottom: 0;
+            }
+
+            tbody tr:nth-child(even) td {
+                background: #fafbfb;
+            }
+
+            .ecc-table {
+                min-width: 1460px;
+            }
+
+            .byte-table {
+                min-width: 720px;
+            }
+
+            .inline-parts {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin: 14px 0;
+            }
+
+            .check-option {
+                display: flex;
+                align-items: flex-start;
+                gap: 9px;
+                margin: 14px 0 18px;
+                color: var(--ink);
+                cursor: pointer;
+            }
+
+            .check-option input {
+                width: 17px;
+                height: 17px;
+                margin: 3px 0 0;
+                accent-color: var(--blue);
+            }
+
+            .check-option small {
+                display: block;
+                margin-top: 2px;
+                color: var(--muted);
+            }
+
+            .tag {
+                border: 1px solid var(--line);
+                border-radius: 4px;
+                background: var(--paper);
+                padding: 5px 8px;
+                font-size: 13px;
+            }
+
+            .tag strong {
+                margin-right: 5px;
+            }
+
+            .grid-layout {
+                display: grid;
+                grid-template-columns: minmax(0, max-content) minmax(260px, 1fr);
+                gap: 24px;
+                align-items: start;
+            }
+
+            .qr-wrap {
+                overflow: auto;
+                max-width: 100%;
+                border: 1px solid var(--line);
+                background: #d8dde1;
+                padding: 10px;
+            }
+
+            .qr-grid {
+                display: grid;
+                grid-template-columns: repeat(21, var(--cell-size));
+                grid-template-rows: repeat(21, var(--cell-size));
+                width: max-content;
+                background: white;
+            }
+
+            .qr-cell {
+                position: relative;
+                width: var(--cell-size);
+                height: var(--cell-size);
+                border: 0;
+                border-radius: 0;
+                min-height: 0;
+                padding: 0;
+                cursor: crosshair;
+            }
+
+            .qr-cell:hover {
+                color: inherit;
+                border-color: transparent;
+                z-index: 2;
+                outline: 2px solid #e4572e;
+                outline-offset: -2px;
+            }
+
+            .qr-cell.black {
+                background: #111;
+            }
+
+            .qr-cell.white {
+                background: #fff;
+            }
+
+            .qr-cell.function::after,
+            .qr-cell.data::after {
+                content: "";
+                position: absolute;
+                inset: 2px;
+                pointer-events: none;
+            }
+
+            .qr-cell.function::after {
+                box-shadow: inset 0 0 0 1px rgba(20, 94, 168, 0.68);
+            }
+
+            .qr-cell.data.unmasked::after {
+                box-shadow: inset 0 0 0 1px rgba(24, 121, 78, 0.72);
+            }
+
+            .qr-cell.data.masked::after {
+                box-shadow: inset 0 0 0 1px rgba(228, 87, 46, 0.82);
+            }
+
+            .legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px 18px;
+                margin-bottom: 14px;
+                color: var(--muted);
+                font-size: 13px;
+            }
+
+            .legend-item {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+            }
+
+            .legend-swatch {
+                width: 17px;
+                height: 17px;
+                background: white;
+            }
+
+            .legend-swatch.function {
+                box-shadow: inset 0 0 0 2px var(--blue);
+            }
+
+            .legend-swatch.unmasked {
+                box-shadow: inset 0 0 0 2px var(--green);
+            }
+
+            .legend-swatch.masked {
+                box-shadow: inset 0 0 0 2px #e4572e;
+            }
+
+            .module-detail {
+                border-top: 3px solid var(--ink);
+                background: var(--paper);
+                padding: 14px 0;
+            }
+
+            .detail-grid {
+                display: grid;
+                grid-template-columns: max-content minmax(0, 1fr);
+                gap: 7px 14px;
+                margin: 0;
+            }
+
+            .detail-grid dt {
+                color: var(--muted);
+                font-weight: 700;
+            }
+
+            .detail-grid dd {
+                margin: 0;
+                font-family:
+                    "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            }
+
+            .footer-note {
+                border-top: 1px solid var(--line);
+                padding-top: 20px;
+                color: var(--muted);
+                font-size: 13px;
+            }
+
+            @media (max-width: 760px) {
+                :root {
+                    --cell-size: 19px;
+                }
+
+                .header-inner,
+                main {
+                    width: min(100% - 20px, 1380px);
+                }
+
+                .input-panel,
+                .grid-layout {
+                    grid-template-columns: 1fr;
+                }
+
+                .input-fields {
+                    grid-template-columns: 1fr;
+                }
+
+                .input-panel button {
+                    justify-self: start;
+                }
+
+                .section-heading {
+                    grid-template-columns: 30px minmax(0, 1fr);
+                    gap: 8px;
+                }
+
+                .qr-wrap {
+                    padding: 6px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header class="page-header">
+            <div class="header-inner">
+                <h1>QR Version 1-L by Hand</h1>
+                <p class="lede">
+                    This notebook was vibecoded with a lot of help from AI,
+                    because I was lazy. It is however very useful! Follow a
+                    message from mode bits through Reed-Solomon parity and
+                    fixed-mask module placement. This worksheet uses Version 1,
+                    error correction L, and mask pattern 1.
+                    <a href="../">Click here</a> for an interactive QR-code
+                    drawing site I made.
+                </p>
+            </div>
+        </header>
+
+        <main>
+            <div class="input-panel">
+                <div class="field">
+                    <div class="input-fields">
+                        <div class="field">
+                            <label for="encoding-mode">Data encoding</label>
+                            <select id="encoding-mode">
+                                <option value="alphanumeric">
+                                    Alphanumeric
+                                </option>
+                                <option value="byte">Byte text</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="message">Message</label>
+                            <input
+                                id="message"
+                                type="text"
+                                value="HELLO"
+                                autocomplete="off"
+                                spellcheck="false"
+                                aria-describedby="message-note validation-error"
+                            />
+                        </div>
+                    </div>
+                    <div class="field-note" id="message-note">
+                        <span id="input-rule"
+                            >Allowed:
+                            <span class="mono"
+                                >0-9 A-Z space $ % * + - . / :</span
+                            ></span
+                        >
+                        <span id="character-count">5 / 25</span>
+                    </div>
+                    <div
+                        class="error-box"
+                        id="validation-error"
+                        role="alert"
+                        hidden
+                    ></div>
+                </div>
+            </div>
+
+            <div id="results">
+                <section class="section" aria-labelledby="heading-a">
+                    <div class="section-heading">
+                        <span class="section-letter">A</span>
+                        <div>
+                            <h2 id="heading-a">Character values</h2>
+                            <p class="section-copy" id="values-explanation">
+                                Each permitted character maps to a value from 0
+                                through 44.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Position</th>
+                                    <th id="value-label">Character</th>
+                                    <th id="numeric-value-label">
+                                        Alphanumeric value
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="character-values"></tbody>
+                        </table>
+                    </div>
+                    <h3>Alphanumeric conversion table</h3>
+                    <p class="muted">
+                        Use this table to convert each permitted character to
+                        its value before encoding pairs.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Character</th>
+                                    <th>Value</th>
+                                    <th>Character</th>
+                                    <th>Value</th>
+                                    <th>Character</th>
+                                    <th>Value</th>
+                                    <th>Character</th>
+                                    <th>Value</th>
+                                    <th>Character</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alphanumeric-table"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section" aria-labelledby="heading-b">
+                    <div class="section-heading">
+                        <span class="section-letter">B</span>
+                        <div>
+                            <h2 id="heading-b">Raw data bit construction</h2>
+                            <p class="section-copy" id="encoding-explanation">
+                                Pairs use
+                                <span class="mono">45 × first + second</span>
+                                and occupy 11 bits. A remaining single character
+                                occupies 6 bits.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">Mode indicator</span
+                            ><span class="mono" id="mode-bits">0010</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Character count</span
+                            ><span class="mono" id="count-bits"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Count width</span
+                            ><span class="mono" id="count-width">9 bits</span>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th id="group-label">Characters</th>
+                                    <th>Calculation</th>
+                                    <th>Decimal</th>
+                                    <th>Encoded bits</th>
+                                    <th>Width</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pair-rows"></tbody>
+                        </table>
+                    </div>
+                    <h3>Combined bits before terminator</h3>
+                    <div class="bit-block mono" id="raw-bits"></div>
+                </section>
+
+                <section class="section" aria-labelledby="heading-c">
+                    <div class="section-heading">
+                        <span class="section-letter">C</span>
+                        <div>
+                            <h2 id="heading-c">Terminator and padding</h2>
+                            <p class="section-copy">
+                                The data area holds exactly 152 bits. It is
+                                terminated, aligned to a byte boundary, then
+                                filled with alternating
+                                <span class="mono">EC</span> and
+                                <span class="mono">11</span> bytes.
+                            </p>
+                        </div>
+                    </div>
+                    <label class="check-option">
+                        <input id="zero-padding" type="checkbox" />
+                        <span>
+                            Pad with <span class="mono">00</span> only
+                            <small
+                                >This simplifies the ECC arithmetic but is not
+                                valid QR padding. Leave unchecked for a
+                                standards-compliant QR code.</small
+                            >
+                        </span>
+                    </label>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">Before terminator</span
+                            ><span class="mono" id="length-before"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Terminator added</span
+                            ><span class="mono" id="terminator-added"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Alignment zeros</span
+                            ><span class="mono" id="alignment-added"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Capacity</span
+                            ><span class="mono">152 bits / 19 bytes</span>
+                        </div>
+                    </div>
+                    <h3>Data bytes before pad bytes</h3>
+                    <div
+                        class="codeword-block mono"
+                        id="bytes-before-pad"
+                    ></div>
+                    <h3>Pad bytes added</h3>
+                    <div class="codeword-block mono" id="pad-bytes"></div>
+                    <h3>Final 19 data codewords</h3>
+                    <div class="codeword-block mono" id="data-codewords"></div>
+                </section>
+
+                <section class="section" aria-labelledby="heading-d">
+                    <div class="section-heading">
+                        <span class="section-letter">D</span>
+                        <div>
+                            <h2 id="heading-d">
+                                Reed-Solomon ECC step by step
+                            </h2>
+                            <p class="section-copy">
+                                Each feedback byte
+                                <span class="mono">t</span> selects
+                                powers-of-two rows from the shortcut table. XOR
+                                those rows to obtain
+                                <span class="mono">V(t)</span>, then XOR it with
+                                the shifted old register. All seven new
+                                registers are computed simultaneously.
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3>Generator coefficients</h3>
+                    <div class="codeword-block mono">7F 7A 9A A4 0B 44 75</div>
+
+                    <h3>Fixed shortcut table for V(t)</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>t bit</th>
+                                    <th>V(t bit)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="v-table"></tbody>
+                        </table>
+                    </div>
+
+                    <h3>Register updates</h3>
+                    <div class="table-wrap">
+                        <table class="ecc-table">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>Data d</th>
+                                    <th>Old p0..p6</th>
+                                    <th>t = d XOR p0</th>
+                                    <th>t decomposition</th>
+                                    <th>V(t)</th>
+                                    <th>Shifted old register</th>
+                                    <th>New p0..p6</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ecc-steps"></tbody>
+                        </table>
+                    </div>
+                    <h3>Final 7 ECC codewords</h3>
+                    <div class="codeword-block mono" id="ecc-codewords"></div>
+                </section>
+
+                <section class="section" aria-labelledby="heading-e">
+                    <div class="section-heading">
+                        <span class="section-letter">E</span>
+                        <div>
+                            <h2 id="heading-e">Final codewords and bits</h2>
+                            <p class="section-copy">
+                                Data codewords come first, followed by the seven
+                                parity codewords. Every byte is emitted most
+                                significant bit first.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="inline-parts">
+                        <span class="tag"
+                            ><strong>Data</strong> 19 codewords</span
+                        >
+                        <span class="tag"
+                            ><strong>ECC</strong> 7 codewords</span
+                        >
+                        <span class="tag"
+                            ><strong>Total</strong> 26 codewords / 208
+                            bits</span
+                        >
+                    </div>
+                    <h3>Data codewords</h3>
+                    <div class="codeword-block mono" id="final-data"></div>
+                    <h3>ECC codewords</h3>
+                    <div class="codeword-block mono" id="final-ecc"></div>
+                    <h3>Full 26-codeword stream</h3>
+                    <div class="codeword-block mono" id="all-codewords"></div>
+                    <h3>Each codeword as bits</h3>
+                    <div class="table-wrap">
+                        <table class="byte-table">
+                            <thead>
+                                <tr>
+                                    <th>Stream index</th>
+                                    <th>Kind</th>
+                                    <th>Hex</th>
+                                    <th>Bits (MSB first)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="codeword-bits"></tbody>
+                        </table>
+                    </div>
+                    <h3>Final 208-bit data/ECC stream</h3>
+                    <div class="bit-block mono" id="final-bits"></div>
+                </section>
+
+                <section class="section" aria-labelledby="heading-f">
+                    <div class="section-heading">
+                        <span class="section-letter">F</span>
+                        <div>
+                            <h2 id="heading-f">QR grid visualizer</h2>
+                            <p class="section-copy">
+                                The raw 208-bit stream is placed in the Version
+                                1 zigzag, skipping function modules, then mask
+                                pattern 1 flips data cells on even-numbered
+                                rows.
+                            </p>
+                        </div>
+                    </div>
+                    <label class="check-option">
+                        <input id="apply-mask" type="checkbox" checked />
+                        <span>
+                            Apply mask pattern 1
+                            <small
+                                >Disable this to inspect the raw, unmasked data
+                                and error-correction modules.</small
+                            >
+                        </span>
+                    </label>
+                    <div class="legend" aria-label="Grid legend">
+                        <span class="legend-item"
+                            ><span class="legend-swatch function"></span
+                            >Function module</span
+                        >
+                        <span class="legend-item"
+                            ><span class="legend-swatch unmasked"></span
+                            >Data/ECC, not flipped</span
+                        >
+                        <span class="legend-item"
+                            ><span class="legend-swatch masked"></span>Data/ECC,
+                            flipped by mask 1</span
+                        >
+                    </div>
+                    <div class="grid-layout">
+                        <div class="qr-wrap">
+                            <div
+                                class="qr-grid"
+                                id="qr-grid"
+                                role="grid"
+                                aria-label="21 by 21 QR module grid"
+                            ></div>
+                        </div>
+                        <aside class="module-detail" aria-live="polite">
+                            <h3>Module details</h3>
+                            <p class="muted" id="detail-help">
+                                Point at or focus a module to inspect it.
+                            </p>
+                            <dl class="detail-grid" id="module-detail"></dl>
+                        </aside>
+                    </div>
+                </section>
+            </div>
+
+            <p class="footer-note">
+                Fixed configuration: QR Version 1, error correction level L, and
+                mask pattern 1. Alphanumeric and byte text encoding are
+                available. Calculations are performed locally in this file.
+            </p>
+        </main>
+
+        <script>
+            "use strict";
+
+            const ALPHANUMERIC_CHARS =
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+            const DATA_CODEWORD_COUNT = 19;
+            const ECC_CODEWORD_COUNT = 7;
+            const DATA_CAPACITY_BITS = 152;
+            const GENERATOR = [127, 122, 154, 164, 11, 68, 117];
+            const FORMAT_BITS = "111001011110011";
+
+            // Each shortcut row is V(t) for one set bit in t.
+            const V_ROWS = [
+                {
+                    bit: 0x01,
+                    values: [0x7f, 0x7a, 0x9a, 0xa4, 0x0b, 0x44, 0x75],
+                },
+                {
+                    bit: 0x02,
+                    values: [0xfe, 0xf4, 0x29, 0x55, 0x16, 0x88, 0xea],
+                },
+                {
+                    bit: 0x04,
+                    values: [0xe1, 0xf5, 0x52, 0xaa, 0x2c, 0x0d, 0xc9],
+                },
+                {
+                    bit: 0x08,
+                    values: [0xdf, 0xf7, 0xa4, 0x49, 0x58, 0x1a, 0x8f],
+                },
+                {
+                    bit: 0x10,
+                    values: [0xa3, 0xf3, 0x55, 0x92, 0xb0, 0x34, 0x03],
+                },
+                {
+                    bit: 0x20,
+                    values: [0x5b, 0xfb, 0xaa, 0x39, 0x7d, 0x68, 0x06],
+                },
+                {
+                    bit: 0x40,
+                    values: [0xb6, 0xeb, 0x49, 0x72, 0xfa, 0xd0, 0x0c],
+                },
+                {
+                    bit: 0x80,
+                    values: [0x71, 0xcb, 0x92, 0xe4, 0xe9, 0xbd, 0x18],
+                },
+            ];
+
+            const elements = {
+                message: document.querySelector("#message"),
+                encodingMode: document.querySelector("#encoding-mode"),
+                zeroPadding: document.querySelector("#zero-padding"),
+                applyMask: document.querySelector("#apply-mask"),
+                count: document.querySelector("#character-count"),
+                error: document.querySelector("#validation-error"),
+                results: document.querySelector("#results"),
+            };
+
+            function charToAlphanumericValue(character) {
+                return ALPHANUMERIC_CHARS.indexOf(character);
+            }
+
+            function toBits(value, width) {
+                return value.toString(2).padStart(width, "0");
+            }
+
+            function toHex(value) {
+                return value.toString(16).toUpperCase().padStart(2, "0");
+            }
+
+            function formatBytes(bytes) {
+                return bytes.map(toHex).join(" ");
+            }
+
+            function groupedBits(bits) {
+                return (bits.match(/.{1,8}/g) || []).join(" ");
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#039;");
+            }
+
+            function displayCharacter(character) {
+                return character === " " ? "space" : character;
+            }
+
+            /**
+             * Build mode, count, pair, and optional single-character bits.
+             */
+            function encodeAlphanumericBits(message) {
+                const modeBits = "0010";
+                const countBits = toBits(message.length, 9);
+                const groups = [];
+                const values = [...message].map((character) => ({
+                    label: displayCharacter(character),
+                    value: charToAlphanumericValue(character),
+                }));
+                let payloadBits = "";
+
+                for (let index = 0; index < message.length; index += 2) {
+                    const first = message[index];
+                    const firstValue = charToAlphanumericValue(first);
+                    const second = message[index + 1];
+
+                    if (second !== undefined) {
+                        const secondValue = charToAlphanumericValue(second);
+                        const decimal = 45 * firstValue + secondValue;
+                        const bits = toBits(decimal, 11);
+                        groups.push({
+                            characters: first + second,
+                            calculation: `45 × ${firstValue} + ${secondValue}`,
+                            decimal,
+                            bits,
+                            width: 11,
+                        });
+                        payloadBits += bits;
+                    } else {
+                        const bits = toBits(firstValue, 6);
+                        groups.push({
+                            characters: first,
+                            calculation: `${firstValue}`,
+                            decimal: firstValue,
+                            bits,
+                            width: 6,
+                        });
+                        payloadBits += bits;
+                    }
+                }
+
+                return {
+                    modeBits,
+                    countBits,
+                    countValue: message.length,
+                    countWidth: 9,
+                    values,
+                    groups,
+                    rawBits: modeBits + countBits + payloadBits,
+                };
+            }
+
+            /**
+             * Encode text as UTF-8 bytes. Version 1 uses an 8-bit byte count field.
+             */
+            function encodeByteTextBits(message) {
+                const bytes = Array.from(new TextEncoder().encode(message));
+                const modeBits = "0100";
+                const countBits = toBits(bytes.length, 8);
+                const values = bytes.map((byte) => ({
+                    label: `0x${toHex(byte)}`,
+                    value: byte,
+                }));
+                const groups = bytes.map((byte, index) => ({
+                    characters: `Byte ${index + 1}`,
+                    calculation: `0x${toHex(byte)}`,
+                    decimal: byte,
+                    bits: toBits(byte, 8),
+                    width: 8,
+                }));
+                const payloadBits = groups.map((group) => group.bits).join("");
+
+                return {
+                    modeBits,
+                    countBits,
+                    countValue: bytes.length,
+                    countWidth: 8,
+                    values,
+                    groups,
+                    rawBits: modeBits + countBits + payloadBits,
+                };
+            }
+
+            function bitsToBytes(bits) {
+                if (bits.length % 8 !== 0) {
+                    throw new Error("The bit string must be byte-aligned.");
+                }
+
+                const bytes = [];
+                for (let index = 0; index < bits.length; index += 8) {
+                    bytes.push(parseInt(bits.slice(index, index + 8), 2));
+                }
+                return bytes;
+            }
+
+            /**
+             * Terminate, byte-align, and pad to the fixed 19-codeword capacity.
+             */
+            function makeDataCodewords(rawBits, useZeroPadding = false) {
+                const terminatorCount = Math.min(
+                    4,
+                    DATA_CAPACITY_BITS - rawBits.length,
+                );
+                let paddedBits = rawBits + "0".repeat(terminatorCount);
+                const alignmentCount = (8 - (paddedBits.length % 8)) % 8;
+                paddedBits += "0".repeat(alignmentCount);
+
+                const bytesBeforePad = bitsToBytes(paddedBits);
+                const padBytes = [];
+                let nextPad = 0xec;
+
+                while (
+                    bytesBeforePad.length + padBytes.length <
+                    DATA_CODEWORD_COUNT
+                ) {
+                    padBytes.push(useZeroPadding ? 0x00 : nextPad);
+                    nextPad = nextPad === 0xec ? 0x11 : 0xec;
+                }
+
+                return {
+                    lengthBeforeTerminator: rawBits.length,
+                    terminatorCount,
+                    alignmentCount,
+                    bytesBeforePad,
+                    padBytes,
+                    codewords: bytesBeforePad.concat(padBytes),
+                };
+            }
+
+            /**
+             * Multiply two bytes in GF(256), reducing with the QR primitive polynomial
+             * x^8 + x^4 + x^3 + x^2 + 1 (0x11D).
+             */
+            function gfMul(a, b) {
+                let product = 0;
+                let multiplicand = a;
+                let multiplier = b;
+
+                while (multiplier > 0) {
+                    if (multiplier & 1) {
+                        product ^= multiplicand;
+                    }
+                    multiplier >>>= 1;
+                    multiplicand <<= 1;
+                    if (multiplicand & 0x100) {
+                        multiplicand ^= 0x11d;
+                    }
+                }
+
+                return product & 0xff;
+            }
+
+            /**
+             * Reconstruct V(t) by XORing fixed rows for every set bit in t.
+             */
+            function computeVFromRows(t) {
+                const selectedRows = V_ROWS.filter(
+                    (row) => (t & row.bit) !== 0,
+                );
+                const values = Array(ECC_CODEWORD_COUNT).fill(0);
+
+                for (const row of selectedRows) {
+                    for (let index = 0; index < values.length; index += 1) {
+                        values[index] ^= row.values[index];
+                    }
+                }
+
+                return { selectedRows, values };
+            }
+
+            /**
+             * Process each data byte through the seven-register QR RS encoder.
+             */
+            function computeECC(dataCodewords) {
+                let register = Array(ECC_CODEWORD_COUNT).fill(0);
+                const steps = [];
+
+                dataCodewords.forEach((dataByte, index) => {
+                    const oldRegister = register.slice();
+                    const t = dataByte ^ oldRegister[0];
+                    const fromRows = computeVFromRows(t);
+                    const fromGF = GENERATOR.map((coefficient) =>
+                        gfMul(t, coefficient),
+                    );
+                    const shifted = oldRegister.slice(1).concat(0);
+
+                    if (!arraysEqual(fromRows.values, fromGF)) {
+                        throw new Error(
+                            `V(t) shortcut mismatch at ECC step ${index + 1}.`,
+                        );
+                    }
+
+                    register = shifted.map(
+                        (value, registerIndex) => value ^ fromGF[registerIndex],
+                    );
+                    steps.push({
+                        step: index + 1,
+                        dataByte,
+                        oldRegister,
+                        t,
+                        v: fromGF,
+                        shifted,
+                        newRegister: register.slice(),
+                    });
+                });
+
+                return { codewords: register, steps };
+            }
+
+            function arraysEqual(left, right) {
+                return (
+                    left.length === right.length &&
+                    left.every((value, index) => value === right[index])
+                );
+            }
+
+            function makeCell() {
+                return {
+                    isFunction: false,
+                    functionType: "",
+                    value: null,
+                    rawBit: null,
+                    maskApplied: false,
+                    streamIndex: null,
+                    codewordIndex: null,
+                    bitIndex: null,
+                };
+            }
+
+            function setFunction(grid, row, column, value, functionType) {
+                grid[row][column] = {
+                    ...makeCell(),
+                    isFunction: true,
+                    functionType,
+                    value,
+                };
+            }
+
+            function drawFinder(grid, startRow, startColumn) {
+                const pattern = [
+                    "1111111",
+                    "1000001",
+                    "1011101",
+                    "1011101",
+                    "1011101",
+                    "1000001",
+                    "1111111",
+                ];
+
+                pattern.forEach((line, rowOffset) => {
+                    [...line].forEach((bit, columnOffset) => {
+                        setFunction(
+                            grid,
+                            startRow + rowOffset,
+                            startColumn + columnOffset,
+                            Number(bit),
+                            "finder",
+                        );
+                    });
+                });
+            }
+
+            function reserveSeparator(grid, cells) {
+                for (const [row, column] of cells) {
+                    setFunction(grid, row, column, 0, "separator");
+                }
+            }
+
+            function placeFormatBits(grid) {
+                const firstCopy = [
+                    [8, 0],
+                    [8, 1],
+                    [8, 2],
+                    [8, 3],
+                    [8, 4],
+                    [8, 5],
+                    [8, 7],
+                    [8, 8],
+                    [7, 8],
+                    [5, 8],
+                    [4, 8],
+                    [3, 8],
+                    [2, 8],
+                    [1, 8],
+                    [0, 8],
+                ];
+                const secondCopy = [
+                    [20, 8],
+                    [19, 8],
+                    [18, 8],
+                    [17, 8],
+                    [16, 8],
+                    [15, 8],
+                    [14, 8],
+                    [8, 13],
+                    [8, 14],
+                    [8, 15],
+                    [8, 16],
+                    [8, 17],
+                    [8, 18],
+                    [8, 19],
+                    [8, 20],
+                ];
+
+                [firstCopy, secondCopy].forEach((coordinates) => {
+                    coordinates.forEach(([row, column], index) => {
+                        setFunction(
+                            grid,
+                            row,
+                            column,
+                            Number(FORMAT_BITS[index]),
+                            "format",
+                        );
+                    });
+                });
+            }
+
+            /**
+             * Place the 208 raw stream bits in the specified Version 1 zigzag.
+             */
+            function placeDataBits(grid, bitStream) {
+                const columnPairs = [
+                    [20, 19, "up"],
+                    [18, 17, "down"],
+                    [16, 15, "up"],
+                    [14, 13, "down"],
+                    [12, 11, "up"],
+                    [10, 9, "down"],
+                    [8, 7, "up"],
+                    [5, 4, "down"],
+                    [3, 2, "up"],
+                    [1, 0, "down"],
+                ];
+                let streamIndex = 0;
+
+                for (const [
+                    rightColumn,
+                    leftColumn,
+                    direction,
+                ] of columnPairs) {
+                    const rows =
+                        direction === "up"
+                            ? Array.from(
+                                  { length: 21 },
+                                  (_, index) => 20 - index,
+                              )
+                            : Array.from({ length: 21 }, (_, index) => index);
+
+                    for (const row of rows) {
+                        for (const column of [rightColumn, leftColumn]) {
+                            if (grid[row][column].isFunction) {
+                                continue;
+                            }
+                            if (streamIndex >= bitStream.length) {
+                                throw new Error(
+                                    "The grid contains more data cells than the 208-bit stream.",
+                                );
+                            }
+
+                            grid[row][column] = {
+                                ...makeCell(),
+                                rawBit: Number(bitStream[streamIndex]),
+                                streamIndex,
+                                codewordIndex: Math.floor(streamIndex / 8),
+                                bitIndex: streamIndex % 8,
+                            };
+                            streamIndex += 1;
+                        }
+                    }
+                }
+
+                if (streamIndex !== bitStream.length) {
+                    throw new Error(
+                        `Placed ${streamIndex} of ${bitStream.length} data bits.`,
+                    );
+                }
+            }
+
+            function applyMask1(grid, enabled = true) {
+                for (let row = 0; row < 21; row += 1) {
+                    for (let column = 0; column < 21; column += 1) {
+                        const cell = grid[row][column];
+                        if (cell.isFunction) {
+                            continue;
+                        }
+                        cell.maskApplied = enabled && row % 2 === 0;
+                        cell.value = cell.maskApplied
+                            ? cell.rawBit ^ 1
+                            : cell.rawBit;
+                    }
+                }
+                return grid;
+            }
+
+            function buildQrGrid(bitStream, maskEnabled = true) {
+                const grid = Array.from({ length: 21 }, () =>
+                    Array.from({ length: 21 }, makeCell),
+                );
+
+                drawFinder(grid, 0, 0);
+                drawFinder(grid, 0, 14);
+                drawFinder(grid, 14, 0);
+
+                const separators = [];
+                for (let index = 0; index <= 7; index += 1) {
+                    separators.push([7, index], [index, 7]);
+                    separators.push([7, 13 + index], [index, 13]);
+                    separators.push([13, index], [13 + index, 7]);
+                }
+                reserveSeparator(grid, separators);
+
+                for (let coordinate = 8; coordinate <= 12; coordinate += 1) {
+                    setFunction(
+                        grid,
+                        6,
+                        coordinate,
+                        coordinate % 2 === 0 ? 1 : 0,
+                        "timing",
+                    );
+                    setFunction(
+                        grid,
+                        coordinate,
+                        6,
+                        coordinate % 2 === 0 ? 1 : 0,
+                        "timing",
+                    );
+                }
+
+                setFunction(grid, 13, 8, 1, "dark module");
+                placeFormatBits(grid);
+                placeDataBits(grid, bitStream);
+                return applyMask1(grid, maskEnabled);
+            }
+
+            function validateMessage(message, mode) {
+                if (mode === "byte") {
+                    const byteLength = new TextEncoder().encode(message).length;
+                    if (byteLength > 17) {
+                        return `Message encodes to ${byteLength} UTF-8 bytes. Version 1-L byte mode allows at most 17 bytes.`;
+                    }
+                    return "";
+                }
+
+                if (message.length > 25) {
+                    return `Message is ${message.length} characters long. Version 1-L alphanumeric mode allows at most 25.`;
+                }
+
+                const invalid = [...message].filter(
+                    (character) => charToAlphanumericValue(character) === -1,
+                );
+                if (invalid.length > 0) {
+                    const unique = [...new Set(invalid)]
+                        .map(displayCharacter)
+                        .join(", ");
+                    return `Unsupported character${unique.includes(",") ? "s" : ""}: ${unique}.`;
+                }
+
+                return "";
+            }
+
+            function describeDecomposition(t) {
+                const bits = V_ROWS.filter((row) => (t & row.bit) !== 0)
+                    .map((row) => toHex(row.bit))
+                    .reverse();
+                return bits.length ? bits.join(" XOR ") : "00";
+            }
+
+            function renderVTable() {
+                document.querySelector("#v-table").innerHTML = V_ROWS.map(
+                    (row) => `
+        <tr>
+          <td class="mono">${toHex(row.bit)}</td>
+          <td class="mono">${formatBytes(row.values)}</td>
+        </tr>
+      `,
+                ).join("");
+            }
+
+            function renderAlphanumericTable() {
+                const columns = 5;
+                const rows = Math.ceil(ALPHANUMERIC_CHARS.length / columns);
+                const htmlRows = [];
+
+                for (let row = 0; row < rows; row += 1) {
+                    const cells = [];
+                    for (let column = 0; column < columns; column += 1) {
+                        const value = row + column * rows;
+                        if (value < ALPHANUMERIC_CHARS.length) {
+                            cells.push(
+                                `<td class="mono">${escapeHtml(displayCharacter(ALPHANUMERIC_CHARS[value]))}</td>`,
+                                `<td class="mono">${value}</td>`,
+                            );
+                        } else {
+                            cells.push("<td></td>", "<td></td>");
+                        }
+                    }
+                    htmlRows.push(`<tr>${cells.join("")}</tr>`);
+                }
+
+                document.querySelector("#alphanumeric-table").innerHTML =
+                    htmlRows.join("");
+            }
+
+            function renderGrid(grid, allCodewords) {
+                const container = document.querySelector("#qr-grid");
+                container.innerHTML = "";
+
+                grid.forEach((rowCells, row) => {
+                    rowCells.forEach((cell, column) => {
+                        const button = document.createElement("button");
+                        button.type = "button";
+                        button.className = [
+                            "qr-cell",
+                            cell.value ? "black" : "white",
+                            cell.isFunction ? "function" : "data",
+                            !cell.isFunction && cell.maskApplied
+                                ? "masked"
+                                : "",
+                            !cell.isFunction && !cell.maskApplied
+                                ? "unmasked"
+                                : "",
+                        ]
+                            .filter(Boolean)
+                            .join(" ");
+                        button.setAttribute("role", "gridcell");
+                        button.setAttribute(
+                            "aria-label",
+                            `Row ${row}, column ${column}`,
+                        );
+
+                        const show = () =>
+                            renderModuleDetail(cell, row, column, allCodewords);
+                        button.addEventListener("mouseenter", show);
+                        button.addEventListener("focus", show);
+                        button.addEventListener("click", show);
+                        container.appendChild(button);
+                    });
+                });
+            }
+
+            function renderModuleDetail(cell, row, column, allCodewords) {
+                document.querySelector("#detail-help").textContent =
+                    cell.isFunction
+                        ? "This module belongs to the fixed QR structure."
+                        : "This module carries one bit from the data/ECC stream.";
+
+                const entries = cell.isFunction
+                    ? [
+                          ["Coordinate", `(${row}, ${column})`],
+                          ["Type", `function: ${cell.functionType}`],
+                          ["Final bit", cell.value],
+                      ]
+                    : [
+                          ["Coordinate", `(${row}, ${column})`],
+                          [
+                              "Type",
+                              cell.codewordIndex < DATA_CODEWORD_COUNT
+                                  ? "data"
+                                  : "error correction",
+                          ],
+                          ["Raw bit", cell.rawBit],
+                          [
+                              "Mask applied",
+                              cell.maskApplied ? "yes, XOR 1" : "no",
+                          ],
+                          ["Final bit", cell.value],
+                          ["Stream bit", cell.streamIndex],
+                          [
+                              "Codeword",
+                              `${cell.codewordIndex + 1} (${toHex(allCodewords[cell.codewordIndex])})`,
+                          ],
+                          ["Bit in byte", `${cell.bitIndex} (0 = MSB)`],
+                      ];
+
+                document.querySelector("#module-detail").innerHTML = entries
+                    .map(
+                        ([term, value]) => `
+        <dt>${escapeHtml(term)}</dt><dd>${escapeHtml(value)}</dd>
+      `,
+                    )
+                    .join("");
+            }
+
+            function render(message, mode) {
+                const encoded =
+                    mode === "byte"
+                        ? encodeByteTextBits(message)
+                        : encodeAlphanumericBits(message);
+                const data = makeDataCodewords(
+                    encoded.rawBits,
+                    elements.zeroPadding.checked,
+                );
+                const ecc = computeECC(data.codewords);
+                const allCodewords = data.codewords.concat(ecc.codewords);
+                const finalBitStream = allCodewords
+                    .map((byte) => toBits(byte, 8))
+                    .join("");
+
+                document.querySelector("#character-values").innerHTML =
+                    encoded.values
+                        .map(
+                            (entry, index) => `
+        <tr>
+          <td class="mono">${index + 1}</td>
+          <td class="mono">${escapeHtml(entry.label)}</td>
+          <td class="mono">${entry.value}</td>
+        </tr>
+      `,
+                        )
+                        .join("") ||
+                    '<tr><td colspan="3" class="muted">The empty message has no values.</td></tr>';
+
+                document.querySelector("#mode-bits").textContent =
+                    encoded.modeBits;
+                document.querySelector("#count-bits").textContent =
+                    `${encoded.countBits} (${encoded.countValue})`;
+                document.querySelector("#count-width").textContent =
+                    `${encoded.countWidth} bits`;
+                document.querySelector("#pair-rows").innerHTML =
+                    encoded.groups
+                        .map(
+                            (group) => `
+        <tr>
+          <td class="mono">${escapeHtml(group.characters)}</td>
+          <td class="mono">${escapeHtml(group.calculation)}</td>
+          <td class="mono">${group.decimal}</td>
+          <td class="mono">${group.bits}</td>
+          <td class="mono">${group.width} bits</td>
+        </tr>
+      `,
+                        )
+                        .join("") ||
+                    '<tr><td colspan="5" class="muted">No payload groups for the empty message.</td></tr>';
+                document.querySelector("#raw-bits").textContent = groupedBits(
+                    encoded.rawBits,
+                );
+
+                document.querySelector("#length-before").textContent =
+                    `${data.lengthBeforeTerminator} bits`;
+                document.querySelector("#terminator-added").textContent =
+                    `${data.terminatorCount} zero bits`;
+                document.querySelector("#alignment-added").textContent =
+                    `${data.alignmentCount} zero bits`;
+                document.querySelector("#bytes-before-pad").textContent =
+                    formatBytes(data.bytesBeforePad) || "none";
+                document.querySelector("#pad-bytes").textContent =
+                    formatBytes(data.padBytes) || "none";
+                document.querySelector("#data-codewords").textContent =
+                    formatBytes(data.codewords);
+
+                document.querySelector("#ecc-steps").innerHTML = ecc.steps
+                    .map(
+                        (step) => `
+        <tr>
+          <td class="mono">${step.step}</td>
+          <td class="mono">${toHex(step.dataByte)}</td>
+          <td class="mono">${formatBytes(step.oldRegister)}</td>
+          <td class="mono">${toHex(step.dataByte)} XOR ${toHex(step.oldRegister[0])} = ${toHex(step.t)}</td>
+          <td class="mono">${describeDecomposition(step.t)}</td>
+          <td class="mono">${formatBytes(step.v)}</td>
+          <td class="mono">${formatBytes(step.shifted)}</td>
+          <td class="mono">${formatBytes(step.newRegister)}</td>
+        </tr>
+      `,
+                    )
+                    .join("");
+                document.querySelector("#ecc-codewords").textContent =
+                    formatBytes(ecc.codewords);
+
+                document.querySelector("#final-data").textContent = formatBytes(
+                    data.codewords,
+                );
+                document.querySelector("#final-ecc").textContent = formatBytes(
+                    ecc.codewords,
+                );
+                document.querySelector("#all-codewords").textContent =
+                    formatBytes(allCodewords);
+                document.querySelector("#codeword-bits").innerHTML =
+                    allCodewords
+                        .map(
+                            (byte, index) => `
+        <tr>
+          <td class="mono">${index + 1}</td>
+          <td>${index < DATA_CODEWORD_COUNT ? "Data" : "ECC"}</td>
+          <td class="mono">${toHex(byte)}</td>
+          <td class="mono">${toBits(byte, 8)}</td>
+        </tr>
+      `,
+                        )
+                        .join("");
+                document.querySelector("#final-bits").textContent =
+                    groupedBits(finalBitStream);
+
+                const grid = buildQrGrid(
+                    finalBitStream,
+                    elements.applyMask.checked,
+                );
+                renderGrid(grid, allCodewords);
+            }
+
+            function updateFromInput() {
+                const mode = elements.encodingMode.value;
+                const enteredMessage = elements.message.value;
+                const message =
+                    mode === "alphanumeric"
+                        ? enteredMessage.toUpperCase()
+                        : enteredMessage;
+
+                if (enteredMessage !== message) {
+                    const cursor = elements.message.selectionStart;
+                    elements.message.value = message;
+                    elements.message.setSelectionRange(cursor, cursor);
+                }
+
+                if (mode === "byte") {
+                    const byteLength = new TextEncoder().encode(message).length;
+                    elements.count.textContent = `${byteLength} / 17 bytes`;
+                    document.querySelector("#input-rule").innerHTML =
+                        "UTF-8 text; capacity is measured in encoded bytes.";
+                    document.querySelector("#heading-a").textContent =
+                        "Byte values";
+                    document.querySelector("#values-explanation").textContent =
+                        "The text is converted to UTF-8 bytes. Each byte becomes one 8-bit payload value.";
+                    document.querySelector("#value-label").textContent =
+                        "UTF-8 byte";
+                    document.querySelector("#numeric-value-label").textContent =
+                        "Decimal value";
+                    document.querySelector(
+                        "#encoding-explanation",
+                    ).textContent =
+                        "Byte mode writes each UTF-8 byte directly as eight bits.";
+                    document.querySelector("#group-label").textContent =
+                        "Payload byte";
+                } else {
+                    elements.count.textContent = `${message.length} / 25`;
+                    document.querySelector("#input-rule").innerHTML =
+                        'Allowed: <span class="mono">0-9 A-Z space $ % * + - . / :</span>';
+                    document.querySelector("#heading-a").textContent =
+                        "Character values";
+                    document.querySelector("#values-explanation").textContent =
+                        "Each permitted character maps to a value from 0 through 44.";
+                    document.querySelector("#value-label").textContent =
+                        "Character";
+                    document.querySelector("#numeric-value-label").textContent =
+                        "Alphanumeric value";
+                    document.querySelector("#encoding-explanation").innerHTML =
+                        'Pairs use <span class="mono">45 × first + second</span> and occupy 11 bits. A remaining single character occupies 6 bits.';
+                    document.querySelector("#group-label").textContent =
+                        "Characters";
+                }
+
+                const error = validateMessage(message, mode);
+                elements.error.textContent = error;
+                elements.error.hidden = !error;
+                elements.results.hidden = Boolean(error);
+
+                if (!error) {
+                    render(message, mode);
+                }
+            }
+
+            renderAlphanumericTable();
+            renderVTable();
+            elements.message.addEventListener("input", updateFromInput);
+            elements.encodingMode.addEventListener("change", updateFromInput);
+            elements.zeroPadding.addEventListener("change", updateFromInput);
+            elements.applyMask.addEventListener("change", updateFromInput);
+            updateFromInput();
+        </script>
+    </body>
+</html>
