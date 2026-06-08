@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>QR Reader Lab</title>
+        <link rel="stylesheet" href="css/main.css" />
+    </head>
+    <body>
+        <main class="reader-layout">
+            <section class="qr-workspace" aria-label="Editable QR code">
+                <div class="workspace-toolbar">
+                    <label class="field version-field">
+                        <span>QR version</span>
+                        <select id="version-select"></select>
+                    </label>
+                    <button type="button" id="clear-grid">Clear</button>
+                    <button type="button" id="load-example">
+                        Load HELLO example
+                    </button>
+                    <label class="file-button">
+                        Import image
+                        <input type="file" id="image-input" accept="image/*" />
+                    </label>
+                </div>
+
+                <div class="grid-frame">
+                    <div
+                        class="qr-grid"
+                        id="qr-grid"
+                        role="grid"
+                        aria-label="Editable QR module grid"
+                    ></div>
+                </div>
+                <div class="grid-legend" id="grid-legend"></div>
+                <p class="workspace-hint">
+                    Click modules to toggle black and white. Image import works
+                    best with a straight, tightly cropped QR code.
+                </p>
+            </section>
+
+            <article class="instructions">
+                <header class="page-header">
+                    <h1>Read a QR code by hand</h1>
+                    <p>
+                        Enter a Version 1-10 QR code on the left. Each step
+                        reads directly from those modules and shows the
+                        corresponding structure on the grid.
+                    </p>
+                    <p>
+                        If you're looking to draw a QR code yourself
+                        step-by-step, please head over to the
+                        <a href="../drawing/">QR Studio</a>, which I also made.
+                    </p>
+                </header>
+
+                <div class="status" id="reader-status" role="status">
+                    Choose a version, enter the modules, then work downward.
+                </div>
+
+                <section class="step" id="step-version">
+                    <div class="step-heading">
+                        <span class="step-number">1</span>
+                        <div>
+                            <h2>Understand the version</h2>
+                            <p>
+                                A QR symbol is always square. Its side length
+                                determines the version:
+                                <code>(size - 17) / 4</code>.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        class="show-step"
+                        type="button"
+                        data-stage="version"
+                    >
+                        Show structure on grid
+                    </button>
+                    <div class="metric-row">
+                        <div class="metric">
+                            <span>Measured size</span>
+                            <strong id="measured-size">21 × 21</strong>
+                        </div>
+                        <div class="metric">
+                            <span>Calculation</span>
+                            <strong id="version-calculation"
+                                >(21 - 17) / 4 = 1</strong
+                            >
+                        </div>
+                        <div class="metric">
+                            <span>Version</span>
+                            <strong id="detected-version">1</strong>
+                        </div>
+                    </div>
+                    <div class="visual-strip" id="structure-strip"></div>
+                    <p class="result-note" id="version-information-note"></p>
+                </section>
+
+                <section class="step" id="step-mask">
+                    <div class="step-heading">
+                        <span class="step-number">2</span>
+                        <div>
+                            <h2>Read and undo the mask</h2>
+                            <p>
+                                Read Format Copy A, XOR it with the fixed format
+                                mask, and use its three masking-pattern bits.
+                                This worksheet treats Copy A as truth and does
+                                not perform format error correction.
+                            </p>
+                        </div>
+                    </div>
+                    <button class="show-step" type="button" data-stage="format">
+                        Show mask bits on grid
+                    </button>
+                    <div class="format-process">
+                        <div class="format-process-row">
+                            <span class="process-number">1</span>
+                            <div>
+                                <span class="process-label"
+                                    >Read Format Copy A</span
+                                >
+                                <code id="format-copy-a">000000000000000</code>
+                            </div>
+                        </div>
+                        <div class="format-process-row">
+                            <span class="process-number">2</span>
+                            <div>
+                                <span class="process-label"
+                                    >XOR the fixed format mask</span
+                                >
+                                <code
+                                    >10<span class="mask-bit-group">101</span
+                                    >0000010010</code
+                                >
+                            </div>
+                        </div>
+                        <div class="format-process-row">
+                            <span class="process-number">3</span>
+                            <div>
+                                <span class="process-label"
+                                    >Keep the three mask bits</span
+                                >
+                                <code id="format-unmasked-bits"
+                                    >000000000000000</code
+                                >
+                            </div>
+                        </div>
+                    </div>
+                    <div class="format-result">
+                        <div class="metric">
+                            <span>Ignored in this step</span>
+                            <strong>2 level bits + 10 BCH bits</strong>
+                        </div>
+                        <div class="metric">
+                            <span>Mask indicator used</span>
+                            <strong id="mask-pattern">000 · Pattern 0</strong>
+                        </div>
+                    </div>
+                    <div class="formula-box">
+                        <span>Mask formula</span>
+                        <code id="mask-formula"
+                            >Read the format information first.</code
+                        >
+                    </div>
+                    <label class="check-option mask-preview-option">
+                        <input type="checkbox" id="preview-unmasked" checked />
+                        <span>
+                            <strong>Preview the unmasked data</strong>
+                            <small
+                                >Show data and ECC modules after applying the
+                                selected XOR formula.</small
+                            >
+                        </span>
+                    </label>
+                    <h3>Masking-pattern reference</h3>
+                    <div class="table-wrap">
+                        <table class="mask-table">
+                            <thead>
+                                <tr>
+                                    <th>Bits</th>
+                                    <th>Pattern</th>
+                                    <th>Invert when</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>000</code></td>
+                                    <td>0</td>
+                                    <td>
+                                        <code>(row + column) mod 2 = 0</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>001</code></td>
+                                    <td>1</td>
+                                    <td><code>row mod 2 = 0</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>010</code></td>
+                                    <td>2</td>
+                                    <td><code>column mod 3 = 0</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>011</code></td>
+                                    <td>3</td>
+                                    <td>
+                                        <code>(row + column) mod 3 = 0</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>100</code></td>
+                                    <td>4</td>
+                                    <td>
+                                        <code
+                                            >(floor(row / 2) + floor(column /
+                                            3)) mod 2 = 0</code
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>101</code></td>
+                                    <td>5</td>
+                                    <td>
+                                        <code
+                                            >(row × column mod 2) + (row ×
+                                            column mod 3) = 0</code
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>110</code></td>
+                                    <td>6</td>
+                                    <td>
+                                        <code
+                                            >((row × column mod 2) + (row ×
+                                            column mod 3)) mod 2 = 0</code
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>111</code></td>
+                                    <td>7</td>
+                                    <td>
+                                        <code
+                                            >((row + column) mod 2 + (row ×
+                                            column) mod 3) mod 2 = 0</code
+                                        >
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="step" id="step-data">
+                    <div class="step-heading">
+                        <span class="step-number">3</span>
+                        <div>
+                            <h2>Group the data into bytes</h2>
+                            <p>
+                                Start at the bottom-right, move through two
+                                columns at a time, and reverse direction at each
+                                edge. Skip every non-data part.
+                            </p>
+                        </div>
+                    </div>
+                    <button class="show-step" type="button" data-stage="path">
+                        Show zigzag and byte order
+                    </button>
+                    <div class="path-diagram" aria-label="QR zigzag direction">
+                        <span>start</span>
+                        <b>↑</b><b>↓</b><b>↑</b><b>↓</b><b>↑</b>
+                        <span>two columns at a time</span>
+                    </div>
+                    <h3>Raw interleaved codewords</h3>
+                    <div class="byte-stream" id="raw-codewords"></div>
+                    <p class="result-note" id="remainder-note"></p>
+                    <h3>Data blocks after deinterleaving</h3>
+                    <div id="data-blocks" class="block-list"></div>
+                    <h3>Data bytes in decoding order</h3>
+                    <div class="byte-stream" id="data-codewords"></div>
+                </section>
+
+                <section class="step" id="step-decode">
+                    <div class="step-heading">
+                        <span class="step-number">4</span>
+                        <div>
+                            <h2>Read the encoding and decode</h2>
+                            <p>
+                                Each segment starts with a four-bit mode
+                                indicator, followed by a length field and the
+                                encoded payload.
+                            </p>
+                        </div>
+                    </div>
+                    <button class="show-step" type="button" data-stage="decode">
+                        Show decoded payload modules
+                    </button>
+                    <div class="mode-reference">
+                        <span><code>0001</code> Numeric</span>
+                        <span><code>0010</code> Alphanumeric</span>
+                        <span><code>0100</code> Byte text</span>
+                        <span><code>0111</code> ECI</span>
+                    </div>
+                    <div id="segments" class="segment-list"></div>
+                    <div class="decoded-output">
+                        <span>Decoded message</span>
+                        <output id="decoded-message"
+                            >No decodable payload yet.</output
+                        >
+                    </div>
+                    <p class="reference-links">
+                        Full references:
+                        <a href="#alphanumeric-reference"
+                            >alphanumeric values</a
+                        >
+                        and
+                        <a href="#byte-reference">Byte text values</a>.
+                    </p>
+                    <details
+                        class="reference-table"
+                        id="alphanumeric-reference"
+                    >
+                        <summary>Full alphanumeric conversion table</summary>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Value</th>
+                                        <th>Character</th>
+                                        <th>Value</th>
+                                        <th>Character</th>
+                                        <th>Value</th>
+                                        <th>Character</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alphanumeric-reference-body"></tbody>
+                            </table>
+                        </div>
+                    </details>
+                    <details class="reference-table" id="byte-reference">
+                        <summary>Full Byte text byte table</summary>
+                        <p class="result-note">
+                            Values <code title="0000 0000">00</code>-<code
+                                title="0111 1111"
+                                >7F</code
+                            >
+                            map directly to ASCII. Values
+                            <code title="1000 0000">80</code>-<code
+                                title="1111 1111"
+                                >FF</code
+                            >
+                            normally participate in multi-byte UTF-8 sequences,
+                            unless an ECI segment selects another character set.
+                        </p>
+                        <div class="table-wrap">
+                            <table class="byte-reference-grid">
+                                <thead id="byte-reference-head"></thead>
+                                <tbody id="byte-reference-body"></tbody>
+                            </table>
+                        </div>
+                    </details>
+                </section>
+            </article>
+        </main>
+
+        <canvas id="image-canvas" hidden></canvas>
+        <script type="module" src="js/main.js"></script>
+    </body>
+</html>
