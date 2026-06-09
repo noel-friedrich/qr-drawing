@@ -61,6 +61,7 @@ const errorCorrectionSelect = document.getElementById(
 );
 const maskPatternSelect = document.getElementById("mask-pattern-select");
 const versionSelect = document.getElementById("version-select");
+const zeroPadding = document.getElementById("zero-padding");
 const overlayLegend = document.getElementById("overlay-legend");
 
 let currentVersionSpec = null;
@@ -220,6 +221,10 @@ dataFieldContainer.addEventListener("input", () => {
   currentEncodedData = null;
 });
 
+zeroPadding.addEventListener("change", () => {
+  currentEncodedData = null;
+});
+
 errorCorrectionSelect.addEventListener("change", () => {
   currentEncodedData = null;
   updateDataCapacity();
@@ -350,6 +355,7 @@ function encodeCurrentData() {
   const encodedData = encodeData({
     ...dataControls.getData(),
     errorCorrectionLevel: errorCorrectionSelect.value,
+    useZeroPadding: zeroPadding.checked,
     versionSpec: currentVersionSpec,
   });
 

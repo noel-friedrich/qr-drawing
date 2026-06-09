@@ -313,14 +313,24 @@ export function getDataModulePositions(versionSpec) {
   return getDataModulePath(versionSpec);
 }
 
-export function encodeData({ type, value, versionSpec, errorCorrectionLevel }) {
+export function encodeData({
+  type,
+  value,
+  versionSpec,
+  errorCorrectionLevel,
+  useZeroPadding = false,
+}) {
   const rawBits = [
     ...modeIndicators[type],
     ...getCharacterCountBits(type, value, versionSpec.version),
     ...getPayloadBits(type, value),
   ];
   const info = getBlockInfo(versionSpec.version, errorCorrectionLevel);
-  const dataCodewords = finalizeDataCodewords(rawBits, info.dataCodewords);
+  const dataCodewords = finalizeDataCodewords(
+    rawBits,
+    info.dataCodewords,
+    useZeroPadding,
+  );
   const dataBlocks = splitIntoBlocks(dataCodewords, info);
   const interleavedDataCodewords = interleaveBlocks(dataBlocks);
   const interleavedDataBits = codewordsToBits(interleavedDataCodewords);
@@ -378,7 +388,11 @@ function getBlockInfo(version, errorCorrectionLevel) {
   return blockInfo[version][errorCorrectionLevel];
 }
 
-function finalizeDataCodewords(rawBits, dataCodewordCapacity) {
+function finalizeDataCodewords(
+  rawBits,
+  dataCodewordCapacity,
+  useZeroPadding,
+) {
   const capacityBits = dataCodewordCapacity * 8;
   const bits = [...rawBits];
 
@@ -396,7 +410,7 @@ function finalizeDataCodewords(rawBits, dataCodewordCapacity) {
   }
 
   const codewords = bitsToCodewords(bits);
-  const padBytes = [0xec, 0x11];
+  const padBytes = useZeroPadding ? [0x00] : [0xec, 0x11];
   let padIndex = 0;
 
   while (codewords.length < dataCodewordCapacity) {

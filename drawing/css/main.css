@@ -156,6 +156,32 @@ textarea:focus-visible {
     margin: 16px 0 8px;
 }
 
+.sidebar-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 12px 0;
+    cursor: pointer;
+}
+
+.sidebar-checkbox input {
+    width: 16px;
+    height: 16px;
+    margin: 2px 0 0;
+}
+
+.sidebar-checkbox span,
+.sidebar-checkbox small {
+    display: block;
+}
+
+.sidebar-checkbox small {
+    margin-top: 3px;
+    color: #555;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
 .button-stack {
     display: grid;
     gap: 8px;
